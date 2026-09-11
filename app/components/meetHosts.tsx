@@ -3,7 +3,7 @@ import Image from "next/image";
 const hosts = [
   {
     name: "Soumya Agarwal",
-    image: "/hosts/soumya.jpg",
+    image: "/hosts/soumya.svg",
     mobileDescription:
       "Content creator, full-time professional, book lover, and reliable source of a movie quote.",
     description:
@@ -11,7 +11,7 @@ const hosts = [
   },
   {
     name: "Palak Agarwal",
-    image: "/hosts/palak.jpg",
+    image: "/hosts/palak.svg",
     mobileDescription:
       "Creative planner with a soft spot for art, travel, food, fashion, sports, and staring at the sky.",
     description:
@@ -26,11 +26,11 @@ export default function MeetHostSection() {
         <div className="flex flex-col gap-6 border-b border-stone pb-8 md:flex-row md:items-end md:justify-between md:gap-8 md:pb-12">
           <div>
           <p className="text-[11px] uppercase tracking-[0.25em] text-graphite">
-            [ Meet the hosts ]
+            [ The people behind it ]
           </p>
 
           <h2 className="mt-4 max-w-3xl text-4xl font-normal leading-[0.92] tracking-[-0.05em] text-ink sm:text-5xl md:text-6xl lg:text-7xl">
-            The people behind it.
+            Meet Your Hosts.
           </h2>
         </div>
 

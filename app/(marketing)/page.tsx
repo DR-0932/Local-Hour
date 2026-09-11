@@ -17,10 +17,10 @@ export default function Page(){
             <VenueInfoSection />
         </div>
         <div>
-            <MeetHostSection/>
+            <UpcomingEventSection/>
         </div>
         <div>
-            <UpcomingEventSection/>
+            <MeetHostSection/>
         </div>
     </>)
 }
