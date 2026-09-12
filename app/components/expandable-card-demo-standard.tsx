@@ -1,168 +1,247 @@
 "use client";
 
-import React, { useEffect, useId, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useOutsideClick } from "@/hooks/use-outside-click";
-import { getEvents, Event as ApiEvent } from "@/lib/api";
 
-type Card = {
+export type EventCard = {
   id?: string;
   title: string;
   src?: string;
   dateOfEvent?: string;
   venue?: string;
+  fee?: string;
   ctaText?: string;
   ctaLink?: string;
-  content?: any;
   description?: string;
+  content?: React.ReactNode | (() => React.ReactNode);
 };
 
-export default function ExpandableCardDemo() {
-  const [active, setActive] = useState<Card | boolean | null>(null);
-  const [fetched, setFetched] = useState<Card[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [fetchError, setFetchError] = useState<string | null>(null);
+type ExpandableCardDemoProps = {
+  cards: EventCard[];
+  loading?: boolean;
+  error?: string | null;
+  variant?: "marquee" | "grid";
+};
+
+export default function ExpandableCardDemo({
+  cards,
+  loading = false,
+  error = null,
+  variant = "marquee",
+}: ExpandableCardDemoProps) {
+  const [active, setActive] = useState<EventCard | null>(null);
   const ref = useRef<HTMLDivElement>(null);
-  const id = useId();
+  const router = useRouter();
+
+  const handleRegister = (card: EventCard) => {
+    if (!card.ctaLink) return;
+
+    if (typeof window !== "undefined") {
+      window.location.assign(card.ctaLink);
+      return;
+    }
+
+    router.push(card.ctaLink);
+  };
 
   useEffect(() => {
-    let mounted = true;
-    setLoading(true);
-    getEvents()
-      .then((ev) => {
-        if (!mounted) return;
-        setFetched(
-          ev.map((e) => ({
-            id: e.id,
-            title: e.title,
-            src: e.image ?? undefined,
-            dateOfEvent: e.dateOfEvent,
-            venue: e.venue,
-            ctaText: "Register",
-            ctaLink: `#/events/${e.id}`,
-            content: () => <p>{e.description}</p>,
-            description: e.description,
-          }))
-        );
-        setLoading(false);
-      })
-      .catch((err) => {
-        if (!mounted) return;
-        setFetched(cards);
-        setFetchError(null);
-        setLoading(false);
-      });
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setActive(null);
+      }
+    };
+
+    document.body.style.overflow = active ? "hidden" : "auto";
+    window.addEventListener("keydown", onKeyDown);
 
     return () => {
-      mounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setActive(false);
-      }
-    }
-
-    if (active && typeof active === "object") {
-      document.body.style.overflow = "hidden";
-    } else {
       document.body.style.overflow = "auto";
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, [active]);
 
   useOutsideClick(ref, () => setActive(null));
 
-  const displayCards = fetched.length ? fetched : cards;
-  const marqueeCards = [...displayCards, ...displayCards];
+  const displayCards = cards.length ? cards : [];
 
   return (
     <>
       <AnimatePresence>
-        {active && typeof active === "object" && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 h-full w-full z-10"
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {active && typeof active === "object" ? (
-          <div className="fixed inset-0 grid place-items-center z-[100]">
+        {active ? (
+          <>
             <motion.div
-              layoutId={`image-${active.title}-${id}`}
-              ref={ref}
-              className="w-full max-w-[700px] h-full md:h-fit md:max-h-[90%] flex flex-col bg-paper dark:bg-neutral-900 sm:rounded-3xl overflow-hidden border-2 border-ink"
-            >
-              <motion.div layoutId={`image-${active.title}-${id}`}>
-                <img
-                  width={600}
-                  height={360}
-                  src={active.src}
-                  alt={active.title}
-                  className="w-full h-64 lg:h-72 sm:rounded-tr-lg sm:rounded-tl-lg object-cover object-top"
-                />
-              </motion.div>
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-10 h-full w-full bg-black/20"
+            />
 
-              <div>
-                <div className="flex justify-between items-start p-6">
-                  <div className="max-w-[70%]">
-                    <motion.h3
-                      layoutId={`title-${active.title}-${id}`}
-                      className="font-semibold text-ink dark:text-neutral-200 text-3xl"
+            <div className="fixed inset-0 z-[100] grid place-items-center">
+              <motion.div
+                ref={ref}
+                initial={{ opacity: 0, y: 18, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 12, scale: 0.98 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="flex h-full w-full max-w-[700px] flex-col overflow-hidden border-2 border-ink bg-paper sm:rounded-3xl md:h-fit md:max-h-[90%]"
+              >
+                {active.src ? (
+                  <img
+                    width={600}
+                    height={360}
+                    src={active.src}
+                    alt={active.title}
+                    className="h-64 w-full object-cover object-top lg:h-72"
+                  />
+                ) : (
+                  <div className="flex h-64 w-full items-center justify-center bg-[#e9e5f4] text-xs uppercase tracking-[0.28em] text-[#4f4a42] lg:h-72">
+                    Event Preview
+                  </div>
+                )}
+
+                <div className="p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="max-w-[70%]">
+                      <h3 className="text-3xl font-semibold text-ink">{active.title}</h3>
+                      <p className="mt-2 text-graphite">
+                        {formatDateTime(active.dateOfEvent)} • {active.venue}
+                      </p>
+                    </div>
+
+                    <a
+                      href={active.ctaLink ?? "#"}
+                      target="_blank"
+                      className="rounded-full bg-green-500 px-4 py-3 text-sm font-bold text-white"
                     >
-                      {active.title}
-                    </motion.h3>
-                    <motion.p className="text-graphite mt-2">
-                      {formatDateTime(active.dateOfEvent)} • {active.venue}
-                    </motion.p>
+                      {active.ctaText ?? "Details"}
+                    </a>
                   </div>
 
-                  <motion.a
-                    layoutId={`button-${active.title}-${id}`}
-                    href={active.ctaLink}
-                    target="_blank"
-                    className="px-4 py-3 text-sm rounded-full font-bold bg-green-500 text-white"
-                  >
-                    {active.ctaText}
-                  </motion.a>
-                </div>
-                <div className="pt-4 relative px-6 pb-6">
-                  <motion.div
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="text-graphite text-sm md:text-base lg:text-base h-56 md:h-fit pb-10 flex flex-col items-start gap-4 overflow-auto dark:text-neutral-400 [mask:linear-gradient(to_bottom,white,white,transparent)] [scrollbar-width:none] [-ms-overflow-style:none] [-webkit-overflow-scrolling:touch]"
-                  >
+                  <div className="relative mt-5 overflow-auto pb-6 text-sm text-graphite md:text-base [mask:linear-gradient(to_bottom,white,white,transparent)] [scrollbar-width:none] [-ms-overflow-style:none] [-webkit-overflow-scrolling:touch]">
                     {typeof active.content === "function"
                       ? active.content()
-                      : active.content}
-                  </motion.div>
+                      : active.content ?? (
+                          <p>{active.description ?? "More details coming soon."}</p>
+                        )}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          </div>
+              </motion.div>
+            </div>
+          </>
         ) : null}
       </AnimatePresence>
 
       <section className="mx-auto w-full px-0 py-10 sm:py-12 lg:py-16">
         {loading ? (
-          <div className="max-w-5xl mx-auto py-12 text-center text-graphite">Loading events…</div>
-        ) : fetchError && !fetched.length ? (
-          <div className="max-w-5xl mx-auto py-12 text-center text-red-600">{fetchError}</div>
+          <div className="mx-auto max-w-5xl py-12 text-center text-graphite">
+            Loading events…
+          </div>
+        ) : error && !displayCards.length ? (
+          <div className="mx-auto max-w-5xl py-12 text-center text-red-600">
+            {error}
+          </div>
+        ) : variant === "grid" ? (
+          <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:grid-cols-2 lg:grid-cols-3 lg:px-0">
+            {displayCards.map((card, index) => {
+              const titleKey = card.id ?? `${card.title}-${index}`;
+              const tone = [
+                "bg-[#efe6de]",
+                "bg-[#dde7ec]",
+                "bg-[#dfe9db]",
+                "bg-[#e9e5f4]",
+                "bg-[#f3e7d8]",
+              ][index % 5];
+
+              return (
+                <motion.article
+                  key={titleKey}
+                  onClick={() => setActive(card)}
+                  whileHover={{ y: -4 }}
+                  className={`group relative flex h-[430px] w-full cursor-pointer flex-col overflow-hidden rounded-[26px] border-[1.5px] border-[#1f1d1a] ${tone} text-left shadow-[8px_8px_0_rgba(31,29,26,0.06)] transition-all duration-300 hover:shadow-[10px_10px_0_rgba(31,29,26,0.09)]`}
+                >
+                  <div className="relative h-[52%] overflow-hidden border-b-[1.5px] border-[#1f1d1a] bg-[#d7d7d7]">
+                    {card.src ? (
+                      <img
+                        src={card.src}
+                        alt={card.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-[10px] uppercase tracking-[0.32em] text-[#4f4a42]">
+                        Event
+                      </div>
+                    )}
+
+                    <div className="absolute left-4 top-4 flex flex-col gap-2 text-left">
+                      <div className="flex h-[72px] w-[72px] flex-col items-center justify-center rounded-[18px] border-[1.5px] border-[#1f1d1a] bg-[#edf0f5]/90 shadow-[4px_4px_0_rgba(31,29,26,0.05)] backdrop-blur-sm">
+                        <span className="text-[11px] uppercase tracking-[0.22em] text-[#4f4a42]">
+                          {formatDayLabel(card.dateOfEvent)}
+                        </span>
+                        <span className="mt-1 text-3xl font-medium leading-none tracking-[-0.06em] text-[#1f1d1a]">
+                          {formatDayNumber(card.dateOfEvent)}
+                        </span>
+                        <span className="mt-1 text-[9px] uppercase tracking-[0.18em] text-[#4f4a42]">
+                          {formatMonthLabel(card.dateOfEvent)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full border-[1.5px] border-[#1f1d1a] bg-[#f7f4ef]/90 text-[16px] text-[#1f1d1a] shadow-[3px_3px_0_rgba(31,29,26,0.06)]"
+                      aria-label={`More details for ${card.title}`}
+                    >
+                      i
+                    </button>
+                  </div>
+
+                  <div className="flex flex-1 flex-col justify-between px-5 py-5">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-[9px] uppercase tracking-[0.22em] text-[#4f4a42]">
+                        <span className="rounded-full border border-[#1f1d1a]/70 px-2 py-1">
+                          {card.venue?.split(" ")[0] ?? "Event"}
+                        </span>
+                      </div>
+
+                      <h3 className="max-w-[220px] text-[2.2rem] leading-[0.9] tracking-[-0.07em] text-[#1f1d1a] sm:text-[2.5rem]">
+                        {card.title}
+                      </h3>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-medium text-[#1f1d1a]">
+                          {formatTimeOnly(card.dateOfEvent)}
+                        </p>
+                        <span className="rounded-full border border-[#1f1d1a] bg-[#f7f4ef] px-2 py-1 text-[11px] font-medium text-[#1f1d1a]">
+                          {card.fee ?? "₹49/-"}
+                        </span>
+                      </div>
+                      <p className="text-sm leading-5 text-[#4f4a42]">{card.venue}</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleRegister(card);
+                      }}
+                      className="mt-5 w-full rounded-[14px] border-[1.5px] border-[#1f1d1a] bg-[#1f1d1a] px-4 py-3 text-sm font-medium text-[#f6f1e8] shadow-[4px_4px_0_rgba(31,29,26,0.08)] transition hover:bg-[#2f2a27]"
+                    >
+                      Register Now
+                    </button>
+                  </div>
+                </motion.article>
+              );
+            })}
+          </div>
         ) : (
           <div className="relative overflow-hidden border-y-[1.5px] border-[#1f1d1a]/80 bg-[#f3efe6] py-3">
             <div className="marquee-track flex min-w-max items-stretch gap-5 px-4 sm:gap-6 sm:px-6">
-              {marqueeCards.map((card, index) => {
-                const hasImage = Boolean(card.src);
+              {displayCards.map((card, index) => {
+                const titleKey = card.id ?? `${card.title}-${index}`;
                 const tone = [
                   "bg-[#efe6de]",
                   "bg-[#dde7ec]",
@@ -173,13 +252,13 @@ export default function ExpandableCardDemo() {
 
                 return (
                   <motion.article
-                    layoutId={`card-${card.title}-${id}-${index}`}
-                    key={`${card.title}-${index}`}
+                    key={titleKey}
                     onClick={() => setActive(card)}
-                    className={`group relative flex h-[400px] w-[320px] cursor-pointer flex-col overflow-hidden rounded-[26px] border-[1.5px] border-[#1f1d1a] ${tone} text-left shadow-[8px_8px_0_rgba(31,29,26,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[10px_10px_0_rgba(31,29,26,0.09)] sm:h-[430px] sm:w-[360px]`}
+                    whileHover={{ y: -4 }}
+                    className={`group relative flex h-[400px] w-[320px] cursor-pointer flex-col overflow-hidden rounded-[26px] border-[1.5px] border-[#1f1d1a] ${tone} text-left shadow-[8px_8px_0_rgba(31,29,26,0.06)] transition-all duration-300 hover:shadow-[10px_10px_0_rgba(31,29,26,0.09)] sm:h-[430px] sm:w-[360px]`}
                   >
                     <div className="relative h-[52%] overflow-hidden border-b-[1.5px] border-[#1f1d1a] bg-[#d7d7d7]">
-                      {hasImage ? (
+                      {card.src ? (
                         <img
                           src={card.src}
                           alt={card.title}
@@ -217,7 +296,9 @@ export default function ExpandableCardDemo() {
                     <div className="flex flex-1 flex-col justify-between px-5 py-5">
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 text-[9px] uppercase tracking-[0.22em] text-[#4f4a42]">
-                          <span className="rounded-full border border-[#1f1d1a]/70 px-2 py-1">{card.venue?.split(" ")[0] ?? "Event"}</span>
+                          <span className="rounded-full border border-[#1f1d1a]/70 px-2 py-1">
+                            {card.venue?.split(" ")[0] ?? "Event"}
+                          </span>
                         </div>
 
                         <h3 className="max-w-[220px] text-[2.2rem] leading-[0.9] tracking-[-0.07em] text-[#1f1d1a] sm:text-[2.5rem]">
@@ -226,12 +307,23 @@ export default function ExpandableCardDemo() {
                       </div>
 
                       <div className="mt-4 space-y-3">
-                        <p className="text-sm font-medium text-[#1f1d1a]">{formatTimeOnly(card.dateOfEvent)}</p>
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-medium text-[#1f1d1a]">
+                            {formatTimeOnly(card.dateOfEvent)}
+                          </p>
+                          <span className="rounded-full border border-[#1f1d1a] bg-[#f7f4ef] px-2 py-1 text-[16px] font-medium text-[#1f1d1a]">
+                            {card.fee ?? "₹49/-"}
+                          </span>
+                        </div>
                         <p className="text-sm leading-5 text-[#4f4a42]">{card.venue}</p>
                       </div>
 
                       <button
                         type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleRegister(card);
+                        }}
                         className="mt-5 w-full rounded-[14px] border-[1.5px] border-[#1f1d1a] bg-[#1f1d1a] px-4 py-3 text-sm font-medium text-[#f6f1e8] shadow-[4px_4px_0_rgba(31,29,26,0.08)] transition hover:bg-[#2f2a27]"
                       >
                         Register Now
@@ -271,8 +363,7 @@ export default function ExpandableCardDemo() {
 function formatDateTime(iso?: string) {
   if (!iso) return "TBA";
   try {
-    const d = new Date(iso);
-    return d.toLocaleString(undefined, {
+    return new Date(iso).toLocaleString(undefined, {
       month: "short",
       day: "numeric",
       hour: "numeric",
@@ -325,18 +416,9 @@ function formatTimeOnly(iso?: string) {
 export const CloseIcon = () => {
   return (
     <motion.svg
-      initial={{
-        opacity: 0,
-      }}
-      animate={{
-        opacity: 1,
-      }}
-      exit={{
-        opacity: 0,
-        transition: {
-          duration: 0.05,
-        },
-      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: 0.05 } }}
       xmlns="http://www.w3.org/2000/svg"
       width="24"
       height="24"
@@ -354,71 +436,3 @@ export const CloseIcon = () => {
     </motion.svg>
   );
 };
-
-const cards = [
-  {
-    title: "Hilton Palm Jumeirah",
-    src: "https://images.unsplash.com/photo-1505761671935-60e5b5f6f2d8?auto=format&fit=crop&w=1200&q=80",
-    dateOfEvent: new Date(Date.now() + 1000 * 60 * 60 * 24 * 2).toISOString(),
-    venue: "Dubai, UAE",
-    ctaText: "Details",
-    ctaLink: "#",
-    content: () => (
-      <p>
-        A sunset social designed for warm conversations, scenic arrivals, and a polished first impression.
-      </p>
-    ),
-  },
-  {
-    title: "Convene at 225 Liberty",
-    src: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80",
-    dateOfEvent: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5).toISOString(),
-    venue: "New York, USA",
-    ctaText: "Details",
-    ctaLink: "#",
-    content: () => (
-      <p>
-        An intimate city gathering with thoughtful conversations, collaborative energy, and a beautifully hosted evening.
-      </p>
-    ),
-  },
-  {
-    title: "Hotel Grand Hyatt São Paulo",
-    src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
-    dateOfEvent: new Date(Date.now() + 1000 * 60 * 60 * 24 * 9).toISOString(),
-    venue: "São Paulo, Brazil",
-    ctaText: "Details",
-    ctaLink: "#",
-    content: () => (
-      <p>
-        A warm evening of meaningful networking, city rhythms, and a room full of people who value good conversation.
-      </p>
-    ),
-  },
-  {
-    title: "Open Mic Poetry Evening",
-    src: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1200&q=80",
-    dateOfEvent: new Date(Date.now() + 1000 * 60 * 60 * 24 * 12).toISOString(),
-    venue: "Cafe Turtle, New Delhi",
-    ctaText: "Details",
-    ctaLink: "#",
-    content: () => (
-      <p>
-        A mellow night of poetry, open mic performances, and slow conversation in a room built for listening.
-      </p>
-    ),
-  },
-  {
-    title: "Weekend Trail Run",
-    src: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?auto=format&fit=crop&w=1200&q=80",
-    dateOfEvent: new Date(Date.now() + 1000 * 60 * 60 * 24 * 15).toISOString(),
-    venue: "Central Park, Lucknow",
-    ctaText: "Details",
-    ctaLink: "#",
-    content: () => (
-      <p>
-        A mindful start to the weekend with movement, fresh air, and a post-run coffee and chat circle.
-      </p>
-    ),
-  },
-];

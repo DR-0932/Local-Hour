@@ -49,9 +49,9 @@ export default function EventSection() {
         <div className="grid gap-7 md:grid-cols-2 md:gap-10">
 
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-graphite">
+            {/* <p className="text-xs font-medium uppercase tracking-[0.2em] text-graphite">
               [ What we do ]
-            </p>
+            </p> */}
 
             <h2 className="mt-5 max-w-xl text-5xl font-medium leading-[0.9] tracking-[-0.05em] sm:text-6xl md:text-7xl">
               Pick your

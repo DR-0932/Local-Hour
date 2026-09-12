@@ -12,7 +12,7 @@ export default function Navbar() {
 
         {/* Navigation */}
         <div className="flex items-center gap-10 text-xs">
-          <Link href="/events" className="hover:text-graphite">
+          <Link href="/event" className="hover:text-graphite">
             Events
           </Link>
 

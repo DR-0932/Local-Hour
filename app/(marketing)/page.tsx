@@ -3,6 +3,7 @@ import HeroSection from "@/app/components/heroSection";
 import MeetHostSection from "@/app/components/meetHosts";
 import UpcomingEventSection from "@/app/components/upcomingEvents";
 import VenueInfoSection from "@/app/components/VenueInfoSection";
+import EventSectionMobile from "../components/mobile/eventSection.Mobile";
 
 export default function Page(){
 
@@ -10,9 +11,12 @@ export default function Page(){
         <div>
             <HeroSection/>
         </div>
-        <div>
+        <div className="hidden md:block">
             <EventSection/>
         </div>
+        {/* <div className="block md:hidden">
+            <EventSectionMobile/>
+        </div> */}
         <div>
             <VenueInfoSection />
         </div>
