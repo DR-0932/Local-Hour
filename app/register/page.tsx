@@ -2,7 +2,8 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import RegistrationForm from "@/app/components/registrationForm";
+import RegistrationForm from "@/components/events/registrationForm";
+
 
 function RegisterPageContent() {
   const searchParams = useSearchParams();
