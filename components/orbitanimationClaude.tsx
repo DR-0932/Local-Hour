@@ -80,17 +80,17 @@ const DEFAULT_RESPONSIVE = {
 
 /* ------------------------------------------------------------------- utils */
 
-const clamp = (value, min = 0, max = 1) => Math.min(Math.max(value, min), max);
-const lerp = (from, to, t) => from + (to - from) * t;
+const clamp = (value: number, min = 0, max = 1) => Math.min(Math.max(value, min), max);
+const lerp = (from: number, to: number, t: number) => from + (to - from) * t;
 
 /** Ken Perlin's smootherstep — C2 continuous, so phases blend without a kink. */
-function smootherstep(start, end, value) {
+function smootherstep(start: number, end: number, value: number) {
   if (start === end) return value < start ? 0 : 1;
   const t = clamp((value - start) / (end - start));
   return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
-const getHref = (link) => {
+const getHref = (link: any): string => {
   if (!link) return "";
   if (typeof link === "string") return link;
   return String(link.url || link.href || link.path || "");
@@ -99,10 +99,10 @@ const getHref = (link) => {
 /* ------------------------------------------------------------------- hooks */
 
 /** Tracks an element's box with a ResizeObserver. */
-function useMeasure() {
-  const [element, setElement] = React.useState(null);
+function useMeasure(): [(node: any) => void, { width: number; height: number }] {
+  const [element, setElement] = React.useState<any>(null);
   const [size, setSize] = React.useState({ width: 1440, height: 900 });
-  const ref = React.useCallback((node) => setElement(node), []);
+  const ref = React.useCallback((node: any) => setElement(node), []);
 
   React.useLayoutEffect(() => {
     if (!element) return;
@@ -110,7 +110,7 @@ function useMeasure() {
       const bounds = element.getBoundingClientRect();
       const width = Math.max(Math.round(bounds.width), 1);
       const height = Math.max(Math.round(bounds.height), 1);
-      setSize((prev) =>
+      setSize((prev: { width: number; height: number }) =>
         Math.abs(prev.width - width) < 1 && Math.abs(prev.height - height) < 1
           ? prev
           : { width, height }
@@ -131,12 +131,15 @@ function useMeasure() {
  * Deliberately not useScroll + useSpring: the original eases toward the target
  * without overshoot, and a spring would add a bounce the arc wasn't tuned for.
  */
-function useSmoothScrollProgress(rootRef, { startOffset, smoothness, enabled }) {
+function useSmoothScrollProgress(
+  rootRef: React.RefObject<HTMLElement | null>,
+  { startOffset, smoothness, enabled }: { startOffset: number; smoothness: number; enabled: boolean }
+) {
   const [progress, setProgress] = React.useState(0);
   const target = React.useRef(0);
   const current = React.useRef(0);
-  const frame = React.useRef(null);
-  const lastTime = React.useRef(null);
+  const frame = React.useRef<number | null>(null);
+  const lastTime = React.useRef<number | null>(null);
   const [isNear, setIsNear] = React.useState(false);
 
   // Only run the loop while the section is within one viewport of the screen.
@@ -158,7 +161,7 @@ function useSmoothScrollProgress(rootRef, { startOffset, smoothness, enabled }) 
   React.useEffect(() => {
     if (!enabled || !isNear) return;
 
-    const tick = (time) => {
+    const tick = (time: number) => {
       frame.current = null;
       const previous = lastTime.current ?? time;
       const delta = Math.min(Math.max((time - previous) / 1000, 0), 0.064);
@@ -203,7 +206,7 @@ function useSmoothScrollProgress(rootRef, { startOffset, smoothness, enabled }) 
 
 /* ------------------------------------------------------------------- cards */
 
-function CardFace({ item, index, radius, imageFit, background, labelColor, shadowStrength = 1, quality = 1 }) {
+function CardFace({ item, index, radius, imageFit, background, labelColor, shadowStrength = 1, quality = 1 }: any) {
   return (
     <div
       className="relative h-full w-full overflow-hidden [backface-visibility:hidden]"
@@ -237,7 +240,7 @@ function CardFace({ item, index, radius, imageFit, background, labelColor, shado
 function DesktopCard({
   item, index, x, y, z, width, height, rotateY, rotateZ, scale, opacity, zIndex,
   radius, imageFit, cardBackground, labelColor, renderQuality, flattened,
-}) {
+}: any) {
   const href = getHref(item.link);
 
   /**
@@ -291,7 +294,7 @@ function DesktopCard({
 
 /* --------------------------------------------------------- compact / grid */
 
-function GridLayout({ items, config, content, cards, columns, padding, gap, headerGap, background, animate }) {
+function GridLayout({ items, config, content, cards, columns, padding, gap, headerGap, background, animate }: any) {
   const { showCopy, textColor, leftTitle, rightTitle, centerText, centerTextWidth, compactTextGap, compactTitleFont, centerFont } = content;
 
   return (
@@ -317,7 +320,7 @@ function GridLayout({ items, config, content, cards, columns, padding, gap, head
         className="relative grid w-full"
         style={{ gridTemplateColumns: `repeat(${Math.max(Math.round(columns), 1)}, minmax(0, 1fr))`, gap }}
       >
-        {items.map((item, index) => {
+        {items.map((item: any, index: number) => {
           const href = getHref(item.link);
           const face = (
             <div className="relative w-full" style={{ aspectRatio: `${Math.max(cards.aspect, 0.2)} / 1` }}>
@@ -333,8 +336,8 @@ function GridLayout({ items, config, content, cards, columns, padding, gap, head
             </div>
           );
 
-          const Cell = animate ? motion.div : "div";
-          const animationProps = animate
+          const Cell: any = animate ? motion.div : "div";
+          const animationProps: any = animate
             ? {
                 initial: { opacity: 0, y: 24 },
                 whileInView: { opacity: 1, y: 0 },
@@ -371,7 +374,7 @@ export default function OrbitProjects({
   grid: gridProp,
   responsive: responsiveProp,
   className = "",
-}) {
+}: any = {}) {
   const content = { ...DEFAULT_CONTENT, ...contentProp };
   const cards = { ...DEFAULT_CARDS, ...cardsProp };
   const config = { ...DEFAULT_MOTION, ...motionProp };
@@ -512,7 +515,7 @@ export default function OrbitProjects({
         )}
 
         <div className="absolute inset-0 z-10 [transform-style:preserve-3d]">
-          {projectItems.map((item, index) => {
+          {projectItems.map((item: any, index: number) => {
             // Cards reveal and flatten on staggered windows, so the arc
             // assembles and dissolves card by card rather than all at once.
             const cardReveal = smootherstep(0.025 + index * 0.01, 0.18 + index * 0.012, progress);
