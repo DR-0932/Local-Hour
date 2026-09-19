@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ExpandableCardDemo, {
-  type EventCard,
-} from "../components/expandable-card-demo-standard";
+
 import { getEvents } from "@/lib/api";
+import ExpandableCardDemo, { EventCard } from "@/components/landingPage/expandable-card-demo-standard";
+import Navbar from "@/ui/navbar";
 
 const demoCards: EventCard[] = [
   {
@@ -136,7 +136,8 @@ export default function Page() {
     };
   }, []);
 
-  return (
+  return (<>
+    <Navbar/>
     <main className="bg-paper px-4 py-12 text-ink sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="mb-8">
@@ -151,5 +152,6 @@ export default function Page() {
         <ExpandableCardDemo cards={cards} loading={loading} error={error} variant="grid" />
       </div>
     </main>
+  </>
   );
 }
