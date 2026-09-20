@@ -15,13 +15,15 @@ export default function HeroSection() {
     // paused timeline — we control when it plays
     const tl = gsap.timeline({ paused: true }).fromTo(
       lines,
-      { y: 50, opacity: 0, filter: "blur(6px)" },
+      { 
+        y: 56, opacity: 0, filter: "blur(16px)" 
+      },
       {
-        y: 0,
+        y:0,
         opacity: 1,
         filter: "blur(0px)",
         duration: 0.75,
-        stagger: 0.2,
+        stagger: 0.5,
         ease: "power3.out",
       }
     )
