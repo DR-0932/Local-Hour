@@ -25,7 +25,7 @@ const events = [
     subtitle: "Music & people",
     description:
       "Bring an instrument, bring your voice, or simply come listen. Make music together, experiment, and see where the session takes you.",
-    image: "/events/jamming.jpg",
+    image: "/playcards/jamming02.png",
     bg: "bg-fog",
     rotation: "md:rotate-2",
   },
@@ -35,7 +35,7 @@ const events = [
     subtitle: "Your time, your way",
     description:
       "Read, write, draw, talk, crochet, play board games, uno. Do whatever you like.",
-    image: "/playcards/corner.png",
+    image: "/playcards/tablecorner.jpeg",
     bg: "bg-stone",
     rotation: "md:-rotate-1",
   },
