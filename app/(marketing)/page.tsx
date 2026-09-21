@@ -2,7 +2,7 @@ import EventSection from "@/components/landingPage/eventsSection";
 import HeroSection from "@/components/landingPage/heroSection";
 import HeroLanding from "@/components/landingPage/Landing";
 import MeetHostSection from "@/components/landingPage/meetHosts";
-import OrbitProjects from "@/components/orbitanimationClaude";
+import OrbitProjects from "@/components/orbitanimaton/orbitanimationClaude";
 import VenueInfoSection from "@/components/VenueInfoSection";
 import Navbar from "@/ui/navbar";
 
