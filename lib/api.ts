@@ -24,7 +24,7 @@ export type User = {
   gender: "Male" | "Female" | "Other";
 };
 
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4000";
+const BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 async function request<T>(path: string, opts?: RequestInit): Promise<T> {
   const url = path.startsWith("http") ? path : `${BASE}${path}`;
