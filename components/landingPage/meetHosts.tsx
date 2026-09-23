@@ -15,7 +15,7 @@ const hosts = [
     mobileDescription:
       "Creative planner with a soft spot for art, travel, food, fashion, sports, and staring at the sky.",
     description:
-      "Loves creativity and art, writes, and automatically reads a lot. Loves to plan events, travelling, food, fashion, and sports — despite being able to play none. In her free time she stares at a wall or the sky.",
+      "Loves creativity and art, writes, and automatically reads a lot. Loves to plan events, travelling but also staying home,food,fashion,sports(she can play none) and impulsive shopping. In free time you'll probably see her staring at a wall or sky.",
   },
 ];
 
