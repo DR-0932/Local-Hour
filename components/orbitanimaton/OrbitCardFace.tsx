@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { CARD_TEXT_DEFAULTS } from "./orbit-cards";
+import type { OrbitCardTextConfig,OrbitAlign,OrbitJustify,OrbitOverlayFrom } from "./orbit-cards";
 
 /**
  * OrbitCardFace
@@ -18,10 +19,36 @@ import { CARD_TEXT_DEFAULTS } from "./orbit-cards";
  * Content comes from ./orbit-cards.js. This file is layout only.
  */
 
-const JUSTIFY = { top: "flex-start", center: "center", bottom: "flex-end" };
-const ALIGN = { left: "flex-start", center: "center", right: "flex-end" };
 
-function overlayBackground(from, strength) {
+type CardFaceItem = Partial<OrbitCardTextConfig> & {
+  image?: string;
+  label?: string;
+};
+
+type CardFaceProps = {
+  item: CardFaceItem;
+  index: number;
+  radius: number;
+  imageFit: "cover" | "contain";
+  background: string;
+  labelColor: string;
+  shadowStrength?: number;
+  quality?: number;
+};
+
+const JUSTIFY: Record<OrbitJustify, React.CSSProperties["justifyContent"]> = {
+  top: "flex-start",
+  center: "center",
+  bottom: "flex-end",
+};
+
+const ALIGN: Record<OrbitAlign, React.CSSProperties["alignItems"]> = {
+  left: "flex-start",
+  center: "center",
+  right: "flex-end",
+};
+
+function overlayBackground(from: OrbitOverlayFrom, strength: number): string {
   const s = Math.min(Math.max(strength, 0), 1);
   if (from === "full") return `rgba(0,0,0,${s})`;
   const direction = from === "top" ? "to bottom" : "to top";
@@ -37,13 +64,13 @@ export default function CardFace({
   labelColor,
   shadowStrength = 1,
   quality = 1,
-}) {
-  const t = { ...CARD_TEXT_DEFAULTS, ...item };
+}: CardFaceProps) {
+  const t: OrbitCardTextConfig = { ...CARD_TEXT_DEFAULTS, ...item } as OrbitCardTextConfig;
   const hasText = Boolean(t.title || t.body || t.eyebrow || t.meta || t.footerLeft || t.footerRight);
   const hasTopRow = Boolean(t.eyebrow || t.meta);
   const hasFooter = Boolean(t.footerLeft || t.footerRight);
 
-  const small = {
+  const small: React.CSSProperties = {
     fontFamily: t.smallFont,
     fontSize: `${t.smallSize}cqw`,
     lineHeight: 1.3,
@@ -159,4 +186,3 @@ export default function CardFace({
     </div>
   );
 }
- 
