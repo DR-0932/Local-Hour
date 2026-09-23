@@ -3,7 +3,7 @@ import Image from "next/image";
 const hosts = [
   {
     name: "Soumya Agarwal",
-    image: "/hosts/soumya.svg",
+    image: "/hosts-image/soumya.jpeg",
     mobileDescription:
       "Content creator, full-time professional, book lover, and reliable source of a movie quote.",
     description:
@@ -11,7 +11,7 @@ const hosts = [
   },
   {
     name: "Palak Agarwal",
-    image: "/hosts/palak.svg",
+    image: "/hosts-image/palak2.png",
     mobileDescription:
       "Creative planner with a soft spot for art, travel, food, fashion, sports, and staring at the sky.",
     description:
