@@ -18,19 +18,123 @@ import { ORBIT_CARDS } from "./orbit-cards";
  * renders instead. The orbit effect remains available on smaller screens too.
  */
 
+/* ------------------------------------------------------------- shared types */
+
+type OrbitLink = string | { url?: string; href?: string; path?: string };
+
+type OrbitCardItem = {
+  label?: string;
+  image?: string;
+  link?: OrbitLink;
+};
+
+type OrbitContentConfig = {
+  showCopy: boolean;
+  textColor: string;
+  leftTitle: string;
+  rightTitle: string;
+  desktopTitleFont: React.CSSProperties;
+  compactTitleFont: React.CSSProperties;
+  titleCenterGap: number;
+  centerText: string;
+  centerTextWidth: number;
+  compactTextGap: number;
+  centerFont: React.CSSProperties;
+};
+
+type OrbitCardsConfig = {
+  background: string;
+  radius: number;
+  aspect: number;
+  imageFit: "cover" | "contain";
+  depthOpacity: number;
+  depthScale: number;
+  renderQuality: number;
+  labelColor: string;
+};
+
+type OrbitMotionConfig = {
+  scrollLength: number;
+  startOffset: number;
+  smoothness: number;
+  perspective: number;
+  curveWidth: number;
+  curveHeight: number;
+  depth: number;
+  rotation: number;
+  cardWidth: number;
+  offsetY: number;
+};
+
+type OrbitGridConfig = {
+  columns: number;
+  gap: number;
+  maxWidth: number;
+  positionY: number;
+};
+
+type OrbitResponsiveConfig = {
+  desktopBreakpoint: number;
+  mobileBreakpoint: number;
+  tabletColumns: number;
+  mobileColumns: number;
+  padding: string;
+  gap: number;
+  headerGap: number;
+};
+
+type OrbitProjectsProps = {
+  items?: OrbitCardItem[];
+  background?: string;
+  content?: Partial<OrbitContentConfig>;
+  cards?: Partial<OrbitCardsConfig>;
+  motion?: Partial<OrbitMotionConfig>;
+  grid?: Partial<OrbitGridConfig>;
+  responsive?: Partial<OrbitResponsiveConfig>;
+  className?: string;
+};
+
+type DesktopCardProps = {
+  item: OrbitCardItem;
+  index: number;
+  x: number;
+  y: number;
+  z: number;
+  width: number;
+  height: number;
+  rotateY: number;
+  rotateZ: number;
+  scale: number;
+  opacity: number;
+  zIndex: number;
+  radius: number;
+  imageFit: "cover" | "contain";
+  cardBackground: string;
+  labelColor: string;
+  renderQuality: number;
+  flattened: number;
+};
+
+type GridLayoutProps = {
+  items: OrbitCardItem[];
+  config: OrbitMotionConfig;
+  content: OrbitContentConfig;
+  cards: OrbitCardsConfig;
+  columns: number;
+  padding: string;
+  gap: number;
+  headerGap: number;
+  background: string;
+  animate: boolean;
+};
+
+const EASE_OUT_EXPO = [0.22, 1, 0.36, 1] as const;
+
 /* ------------------------------------------------------------------ config */
 
-// const DEFAULT_ITEMS = [
-//   { image: "/club/image01.jpeg", label: "Project 01" },
-//   { image: "/club/image03.jpeg", label: "Project 02" },
-//   { image: "/club/image11.jpeg", label: "Project 03" },
-//   { image: "/club/image08.jpeg", label: "Project 04" },
-//   { image: "/club/image05.jpeg", label: "Project 05" },
-//   { image: "/club/image06.jpeg", label: "Project 06" },
-// ];
-const DEFAULT_ITEMS = ORBIT_CARDS;
+const DEFAULT_ITEMS: OrbitCardItem[] = ORBIT_CARDS;
 
-const DEFAULT_CONTENT = {
+const DEFAULT_CONTENT: OrbitContentConfig = {
   showCopy: true,
   textColor: "#242424",
   leftTitle: "Local",
@@ -44,7 +148,7 @@ const DEFAULT_CONTENT = {
   centerFont: { fontSize: 12, fontWeight: 500, lineHeight: 1.05, letterSpacing: "-0.035em" },
 };
 
-const DEFAULT_CARDS = {
+const DEFAULT_CARDS: OrbitCardsConfig = {
   background: "#fff7ed",
   radius: 16,
   aspect: 1.3,
@@ -55,7 +159,7 @@ const DEFAULT_CARDS = {
   labelColor: "rgba(0, 0, 0, 0.5)",
 };
 
-const DEFAULT_MOTION = {
+const DEFAULT_MOTION: OrbitMotionConfig = {
   scrollLength: 460, // vh of scroll the section occupies
   startOffset: 55, // % down the viewport where progress starts counting
   smoothness: 7, // exponential damping rate
@@ -64,13 +168,13 @@ const DEFAULT_MOTION = {
   curveHeight: 210,
   depth: 520,
   rotation: 310, // degrees travelled across the orbit phase
-  cardWidth: 410,
+  cardWidth: 500,
   offsetY: -40,
 };
 
-const DEFAULT_GRID = { columns: 3, gap: 16, maxWidth: 1160, positionY: 52 };
+const DEFAULT_GRID: OrbitGridConfig = { columns: 2, gap: 16, maxWidth: 1160, positionY: 52 };
 
-const DEFAULT_RESPONSIVE = {
+const DEFAULT_RESPONSIVE: OrbitResponsiveConfig = {
   desktopBreakpoint: 1024,
   mobileBreakpoint: 640,
   tabletColumns: 2,
@@ -82,17 +186,17 @@ const DEFAULT_RESPONSIVE = {
 
 /* ------------------------------------------------------------------- utils */
 
-const clamp = (value, min = 0, max = 1) => Math.min(Math.max(value, min), max);
-const lerp = (from, to, t) => from + (to - from) * t;
+const clamp = (value: number, min = 0, max = 1) => Math.min(Math.max(value, min), max);
+const lerp = (from: number, to: number, t: number) => from + (to - from) * t;
 
 /** Ken Perlin's smootherstep — C2 continuous, so phases blend without a kink. */
-function smootherstep(start, end, value) {
+function smootherstep(start: number, end: number, value: number) {
   if (start === end) return value < start ? 0 : 1;
   const t = clamp((value - start) / (end - start));
   return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
-const getHref = (link) => {
+const getHref = (link?: OrbitLink) => {
   if (!link) return "";
   if (typeof link === "string") return link;
   return String(link.url || link.href || link.path || "");
@@ -101,10 +205,13 @@ const getHref = (link) => {
 /* ------------------------------------------------------------------- hooks */
 
 /** Tracks an element's box with a ResizeObserver. */
-function useMeasure() {
-  const [element, setElement] = React.useState(null);
-  const [size, setSize] = React.useState({ width: 1440, height: 900 });
-  const ref = React.useCallback((node) => setElement(node), []);
+function useMeasure(): [
+  (node: HTMLElement | null) => void,
+  { width: number; height: number }
+] {
+  const [element, setElement] = React.useState<HTMLElement | null>(null);
+  const [size, setSize] = React.useState<{ width: number; height: number }>({ width: 1440, height: 900 });
+  const ref = React.useCallback((node: HTMLElement | null) => setElement(node), []);
 
   React.useLayoutEffect(() => {
     if (!element) return;
@@ -133,12 +240,19 @@ function useMeasure() {
  * Deliberately not useScroll + useSpring: the original eases toward the target
  * without overshoot, and a spring would add a bounce the arc wasn't tuned for.
  */
-function useSmoothScrollProgress(rootRef, { startOffset, smoothness, enabled }) {
+function useSmoothScrollProgress(
+  rootRef: React.RefObject<HTMLElement | null>,
+  {
+    startOffset,
+    smoothness,
+    enabled,
+  }: { startOffset: number; smoothness: number; enabled: boolean }
+): number {
   const [progress, setProgress] = React.useState(0);
   const target = React.useRef(0);
   const current = React.useRef(0);
-  const frame = React.useRef(null);
-  const lastTime = React.useRef(null);
+  const frame = React.useRef<number | null>(null);
+  const lastTime = React.useRef<number | null>(null);
   const [isNear, setIsNear] = React.useState(false);
 
   // Only run the loop while the section is within one viewport of the screen.
@@ -160,14 +274,16 @@ function useSmoothScrollProgress(rootRef, { startOffset, smoothness, enabled }) 
   React.useEffect(() => {
     if (!enabled || !isNear) return;
 
-    const tick = (time) => {
+    const tick = (time: number) => {
       frame.current = null;
       const previous = lastTime.current ?? time;
       const delta = Math.min(Math.max((time - previous) / 1000, 0), 0.064);
       lastTime.current = time;
 
       const rate = Math.max(smoothness, 0.1);
-      const next = current.current + (target.current - current.current) * (1 - Math.exp(-rate * delta));
+      const next =
+        current.current +
+        (target.current - current.current) * (1 - Math.exp(-rate * delta));
       const remaining = Math.abs(target.current - next);
       const settled = remaining < 1e-4 ? target.current : next;
 
@@ -206,9 +322,25 @@ function useSmoothScrollProgress(rootRef, { startOffset, smoothness, enabled }) 
 /* ------------------------------------------------------------------- cards */
 
 function DesktopCard({
-  item, index, x, y, z, width, height, rotateY, rotateZ, scale, opacity, zIndex,
-  radius, imageFit, cardBackground, labelColor, renderQuality, flattened,
-}) {
+  item,
+  index,
+  x,
+  y,
+  z,
+  width,
+  height,
+  rotateY,
+  rotateZ,
+  scale,
+  opacity,
+  zIndex,
+  radius,
+  imageFit,
+  cardBackground,
+  labelColor,
+  renderQuality,
+  flattened,
+}: DesktopCardProps) {
   const href = getHref(item.link);
 
   /**
@@ -242,7 +374,11 @@ function DesktopCard({
         height: h,
         opacity,
         zIndex,
-        transform: `translate3d(${x - (w - width) / 2}px, ${y - (h - height) / 2}px, ${z}px) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale / quality})`,
+        transform: `translate3d(${x - (w - width) / 2}px, ${
+          y - (h - height) / 2
+        }px, ${z}px) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${
+          scale / quality
+        })`,
       }}
     >
       {href ? (
@@ -259,11 +395,15 @@ function DesktopCard({
     </div>
   );
 }
-
 /* --------------------------------------------------------- compact / grid */
 
-function GridLayout({ items, config, content, cards, columns, padding, gap, headerGap, background, animate }) {
-  const { showCopy, textColor, leftTitle, rightTitle, centerText, centerTextWidth, compactTextGap, compactTitleFont, centerFont } = content;
+function GridLayout({
+  items, config, content, cards, columns, padding, gap, headerGap, background, animate,
+}: GridLayoutProps) {
+  const {
+    showCopy, textColor, leftTitle, rightTitle, centerText,
+    centerTextWidth, compactTextGap, compactTitleFont, centerFont,
+  } = content;
 
   return (
     <section className="relative w-full" style={{ padding, background }}>
@@ -304,18 +444,19 @@ function GridLayout({ items, config, content, cards, columns, padding, gap, head
             </div>
           );
 
-          const Cell = animate ? motion.div : "div";
           const animationProps = animate
             ? {
                 initial: { opacity: 0, y: 24 },
                 whileInView: { opacity: 1, y: 0 },
                 viewport: { once: true, margin: "-10%" },
-                transition: { duration: 0.5, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] },
+                transition: { duration: 0.5, delay: index * 0.06, ease: EASE_OUT_EXPO },
               }
             : {};
 
-          return (
-            <Cell key={`${item.label || "project"}-${index}`} {...animationProps}>
+          const key = `${item.label || "project"}-${index}`;
+
+          return animate ? (
+            <motion.div key={key} {...animationProps}>
               {href ? (
                 <a href={href} aria-label={item.label || `Open project ${index + 1}`} className="block w-full text-inherit no-underline">
                   {face}
@@ -323,7 +464,17 @@ function GridLayout({ items, config, content, cards, columns, padding, gap, head
               ) : (
                 face
               )}
-            </Cell>
+            </motion.div>
+          ) : (
+            <div key={key}>
+              {href ? (
+                <a href={href} aria-label={item.label || `Open project ${index + 1}`} className="block w-full text-inherit no-underline">
+                  {face}
+                </a>
+              ) : (
+                face
+              )}
+            </div>
           );
         })}
       </div>
@@ -333,7 +484,7 @@ function GridLayout({ items, config, content, cards, columns, padding, gap, head
 
 /* --------------------------------------------------------------- component */
 
-export default function OrbitProjects({
+export default function OrbitProjectsMobile({
   items = DEFAULT_ITEMS,
   background = "#D4D4D4",
   content: contentProp,
@@ -342,14 +493,14 @@ export default function OrbitProjects({
   grid: gridProp,
   responsive: responsiveProp,
   className = "",
-}) {
-  const content = { ...DEFAULT_CONTENT, ...contentProp };
-  const cards = { ...DEFAULT_CARDS, ...cardsProp };
-  const config = { ...DEFAULT_MOTION, ...motionProp };
-  const grid = { ...DEFAULT_GRID, ...gridProp };
-  const responsive = { ...DEFAULT_RESPONSIVE, ...responsiveProp };
+}: OrbitProjectsProps) {
+  const content: OrbitContentConfig = { ...DEFAULT_CONTENT, ...contentProp };
+  const cards: OrbitCardsConfig = { ...DEFAULT_CARDS, ...cardsProp };
+  const config: OrbitMotionConfig = { ...DEFAULT_MOTION, ...motionProp };
+  const grid: OrbitGridConfig = { ...DEFAULT_GRID, ...gridProp };
+  const responsive: OrbitResponsiveConfig = { ...DEFAULT_RESPONSIVE, ...responsiveProp };
 
-  const rootRef = React.useRef(null);
+  const rootRef = React.useRef<HTMLElement | null>(null);
   const [viewportRef, viewport] = useMeasure();
   const reduceMotion = useReducedMotion();
 
@@ -392,13 +543,13 @@ export default function OrbitProjects({
   // Destination grid
   const columns = Math.min(Math.max(Math.round(grid.columns), 1), Math.max(count, 1));
   const rows = Math.ceil(count / columns);
-  const gridWidth = Math.min(grid.maxWidth, Math.max(vw - 96, 200));
+  const gridWidth = Math.min(grid.maxWidth, Math.max(vw - 96, 450));
   const cardW = Math.max(90, (gridWidth - grid.gap * (columns - 1)) / columns);
   const cardH = cardW / Math.max(cards.aspect, 0.2);
   const gridHeight = rows * cardH + Math.max(rows - 1, 0) * grid.gap;
 
   // Arc dimensions, capped against the viewport so it never overflows
-  const arcCardW = Math.min(config.cardWidth, vw * 0.28);
+  const arcCardW = Math.min(config.cardWidth, vw * 0.50);
   const arcCardH = arcCardW / Math.max(cards.aspect, 0.2);
   const curveW = Math.min(config.curveWidth, vw * 0.44);
   const curveH = Math.min(config.curveHeight, vh * 0.3);

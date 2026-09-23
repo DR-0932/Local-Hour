@@ -1,9 +1,8 @@
 import EventSection from "@/components/landingPage/eventsSection";
 import HeroSection from "@/components/landingPage/heroSection";
-import HeroLanding from "@/components/landingPage/Landing";
 import MeetHostSection from "@/components/landingPage/meetHosts";
-import OrbitProjects from "@/components/orbitanimaton/orbitanimationClaude";
-import VenueInfoSection from "@/components/VenueInfoSection";
+import OrbitProjects from "@/components/orbitanimaton/orbitAnimation";
+import OrbitProjectsMobile from "@/components/orbitanimaton/orbitanimationMobile";
 import Navbar from "@/ui/navbar";
 
 
@@ -24,13 +23,13 @@ export default function Page(){
             <div className="relative  bg-white mx-0.25 ">
                 <EventSection/>
             </div>
-            {/* <div className="block md:hidden">
-                <EventSectionMobile/>
-            </div> */}
-            <div className="relative  bg-white">
-                {/* <VenueInfoSection />
-                 */}
+
+            <div className="relative hidden lg:block bg-white">
                  <OrbitProjects/>
+            </div>
+            <div className="relative  lg:hidden   ">
+
+                 <OrbitProjectsMobile/>
             </div>
             
             <div className="relative  bg-white">
