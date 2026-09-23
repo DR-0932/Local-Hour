@@ -33,6 +33,38 @@
  */
 
 /* Colours lifted from the boxes on the site, so the cards feel like the same family. */
+export type OrbitOverlayFrom = "top" | "bottom" | "full";
+export type OrbitAlign = "left" | "center" | "right";
+export type OrbitJustify = "top" | "center" | "bottom";
+
+export type OrbitCardTextConfig = {
+  title?: string;
+  body?: string;
+  eyebrow?: string;
+  meta?: string;
+  footerLeft?: string;
+  footerRight?: string;
+  overlay: number;
+  overlayFrom: OrbitOverlayFrom;
+  padding: number;
+  textColor: string;
+  align: OrbitAlign;
+  accent: string;
+  titlePosition: OrbitJustify;
+  titleFont: string;
+  titleSize: number;
+  titleWeight: number;
+  titleLeading: number;
+  titleTracking: string;
+  titleColor?: string;
+  bodyFont: string;
+  bodySize: number;
+  bodyWidth: number;
+  smallFont: string;
+  smallSize: number;
+};
+
+
 export const PALETTE = {
   mint: "#b5eecf",
   lilac: "#dcc6f2",
