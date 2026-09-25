@@ -161,7 +161,7 @@ const DEFAULT_MOTION: OrbitMotionConfig = {
   curveHeight: 210,
   depth: 520,
   rotation: 310,
-  cardWidth: 500,
+  cardWidth: 410,
   offsetY: -40,
 };
  
