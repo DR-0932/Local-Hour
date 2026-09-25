@@ -53,7 +53,9 @@ export default function EventCard({
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.15),_transparent_50%)]" />
 
-        <div className="absolute left-4 top-4 rounded-[18px] border border-[#1f1d1a] bg-white/55 px-3 py-2 shadow-[4px_4px_0_rgba(26,22,18,0.08)] backdrop-blur-[2px]" style={{ backgroundColor: dateBadgeBackground }}>
+        <div className="absolute left-4 top-4 rounded-[18px] border border-[#1f1d1a]
+         bg-white/55 px-3 py-2 shadow-[4px_4px_0_rgba(26,22,18,0.08)] backdrop-blur-[2px]" style={{ backgroundColor: dateBadgeBackground }}>
+          
           <div className="text-center leading-none">
             <div className="text-[10px] font-medium uppercase tracking-[0.22em]" style={{ color: dateTextColor }}>
               {month}

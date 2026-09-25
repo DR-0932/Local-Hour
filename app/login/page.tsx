@@ -27,8 +27,7 @@ export default function Page() {
       });
 
       localStorage.setItem("user", JSON.stringify(result.userdata));
-      router.push("/admin");
-
+      window.location.href = "/admin"
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Login failed";
       setError(message);

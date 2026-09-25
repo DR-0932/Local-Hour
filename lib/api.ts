@@ -21,10 +21,10 @@ export type User = {
   username: string;
   name?: string | null;
   email: string;
-  gender: "Male" | "Female" | "Other";
+  gender: "Male" | "Female" | "Other";  
 };
 
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BASE = "http://localhost:8080";
 
 async function request<T>(path: string, opts?: RequestInit): Promise<T> {
   const url = path.startsWith("http") ? path : `${BASE}${path}`;

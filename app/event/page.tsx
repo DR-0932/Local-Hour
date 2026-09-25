@@ -148,7 +148,7 @@ export default function Page() {
             All events
           </h1>
         </div>
-
+      
         <ExpandableCardDemo cards={cards} loading={loading} error={error} variant="grid" />
       </div>
     </main>
