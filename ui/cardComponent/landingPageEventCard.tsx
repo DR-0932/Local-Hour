@@ -1,4 +1,5 @@
 "use client";
+
 import { ArrowUpRight } from "lucide-react";
 
 interface EventCardProps {
@@ -12,6 +13,7 @@ interface EventCardProps {
   index: number;
   hovered: number | null;
   onHover: (index: number) => void;
+  onClick?: () => void;
 }
 
 export default function LandingPageEventCard({
@@ -25,6 +27,7 @@ export default function LandingPageEventCard({
   index,
   hovered,
   onHover,
+  onClick,
 }: EventCardProps) {
   const isHovered = hovered === index;
 
@@ -45,7 +48,16 @@ export default function LandingPageEventCard({
   return (
     <article
       onMouseEnter={() => onHover(index)}
-      className={`${bg} ${rotation} ${translate} relative w-full min-h-[480px] md:w-[340px] md:min-h-[570px] md:shrink-0
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+      className={`${bg} ${rotation} ${translate} cursor-pointer relative w-full min-h-[480px] md:w-[340px] md:min-h-[570px] md:shrink-0
         border-2 border-ink p-5 sm:p-6 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]
         ${index !== 0 ? "md:-ml-8" : ""}
         ${isHovered ? "z-30 shadow-[14px_18px_0px_rgba(0,0,0,0.15)]" : "z-10"}
@@ -54,7 +66,7 @@ export default function LandingPageEventCard({
       {/* Card header */}
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-black">[{number}]</span>
-        <ArrowUpRight size={18} color="#d9668c" />
+        <ArrowUpRight size={18} color="#000000" />
       </div>
 
       {/* Image */}

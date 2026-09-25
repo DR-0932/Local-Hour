@@ -27,26 +27,27 @@ function useIsDesktop() {
 
 const isDesktop = useIsDesktop();
     return(<>
-    <main className="wrapper">
-        <div className="content scroll-smooth">
-            <div className="sticky top-0 z-0">
-                {/* <HeroLanding/> */}
-                <Navbar/>
+<main className="wrapper">
+  <div className="content">
+    
+    <div className="relative">
+      <Navbar />
+      <HeroSection />
+    </div>
 
-                <HeroSection/>
-            </div>
-            <div className="relative  mx-0.25 ">
-                <EventSection/>
-            </div>
+    <section className="relative">
+      <EventSection />
+    </section>
 
-            <div className="relative">
-                {isDesktop ? <OrbitProjects /> : <OrbitProjectsMobile />}
-            </div>
-            
-            <div className="sticky  bg-white">
-                <MeetHostSection/>
-            </div>
-        </div>
-    </main>
+    <section className="relative">
+      {isDesktop ? <OrbitProjects /> : <OrbitProjectsMobile />}
+    </section>
+
+    <section className="relative bg-white">
+      <MeetHostSection />
+    </section>
+
+  </div>
+</main>
     </>)
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useGSAP } from "@gsap/react";
-import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
@@ -39,11 +39,21 @@ const events = [
     bg: "bg-stone",
     rotation: "md:-rotate-1",
   },
+  {
+    number: "04",
+    title: "Or Be A Part Of Events",
+    subtitle: "Silly games & Offline events",
+    description: "Check out events section to see upcoming events",
+    image: "/playcards/tablecorner.jpeg",
+    bg: "bg-[#91b2ff]",
+    rotation: "md:-rotate-1",
+  },
 ];
 
 export default function EventSection() {
   const [hovered, setHovered] = useState<number | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
+  const router = useRouter();
 
   useGSAP(() => {
     const heading = gsap.utils.toArray<HTMLElement>(".heading-line");
@@ -84,7 +94,7 @@ export default function EventSection() {
           </div>
           <div className="flex items-end">
             <p className="copy-line max-w-md text-base leading-7 text-[#df88f2]">
-              Every Sunday can look different. Play something cool, sing some songs, or pick a hobby to spend your time however you want.
+              How our sundays look. <br /> Play something cool, sing some songs, or pick a hobby to spend your time however you want.
             </p>
           </div>
         </div>
@@ -101,6 +111,7 @@ export default function EventSection() {
               index={index}
               hovered={hovered}
               onHover={setHovered}
+              onClick={() => router.push("/event")}
             />
           ))}
         </div>
