@@ -142,7 +142,7 @@ const DEFAULT_CONTENT: OrbitContentConfig = {
   desktopTitleFont: { fontSize: 144, fontWeight: 400, lineHeight: 0.86, letterSpacing: "-0.075em" },
   compactTitleFont: { fontSize: 72, fontWeight: 400, lineHeight: 0.9, letterSpacing: "-0.065em" },
   titleCenterGap: 32,
-  centerText: "Exploring ideas through daily design practice.",
+  centerText: ".",
   centerTextWidth: 220,
   compactTextGap: 28,
   centerFont: { fontSize: 12, fontWeight: 500, lineHeight: 1.05, letterSpacing: "-0.035em" },

@@ -67,7 +67,7 @@ export type OrbitCardTextConfig = {
 
 export const PALETTE = {
   mint: "#b5eecf",
-  lilac: "#dcc6f2",
+  lilac: "#da8fff",
   orange: "#ffc48a",
   cream: "#fcf8ec",
 };
@@ -181,15 +181,15 @@ export const ORBIT_CARDS = [
 
   {
     image: "/club/image03.jpeg",
-    label: "Stay updated",
+    label: "Invite Only",
     // link: "https://chat.whatsapp.com/YOUR-INVITE-LINK",
-    eyebrow: "Stay updated",
-    title: "Never miss\nan update.",
+    eyebrow: "",
+    title: ".",
     titleSize: 9.5,
     body: "",
-    footerRight: "Join WhatsApp →",
+    footerRight: "Invite Only",
     accent: PALETTE.lilac,
-    overlay: 0.65,
+    overlay: 0.9,
   },
 
   {

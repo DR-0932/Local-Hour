@@ -70,7 +70,7 @@ export default function MeetHostSection() {
                     alt={host.name}
                     width={680}
                     height={907}
-                    sizes="(max-width: 640px) 45vw, 320px"
+                    sizes="(max-width: 640px) 36vw, 320px"
                     className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                   />
                 </div>

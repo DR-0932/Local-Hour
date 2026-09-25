@@ -117,7 +117,7 @@ export default function EventSection() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-10 flex flex-col gap-3 border-t border-ash pt-6 md:mt-8 md:flex-row md:items-center md:justify-between">
+        <div className="mt-10 flex flex-col  jusgap-3 border-t border-ash pt-6 md:mt-8 md:flex-row md:items-center md:justify-between ">
           <p className="text-2xl font-medium">No phones during club hours.</p>
         </div>
       </div>

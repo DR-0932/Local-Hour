@@ -127,7 +127,7 @@ export default function ParallaxGallery() {
     relative z-10
     px-3
     pb-40
-    pt-16
+    pt-18
     sm:px-5
     md:px-8
         "
