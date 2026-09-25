@@ -71,7 +71,7 @@ export default function EventSection() {
   }, { scope: sectionRef });
 
   return (
-    <section ref={sectionRef} className="overflow-hidden bg-neutral-900 rounded-t-[50px] px-5 py-20 text-white sm:px-6 md:px-12 md:py-28">
+    <section ref={sectionRef} className="overflow-hidden bg-neutral-900 rounded-t-[56px] px-5 py-20 text-white sm:px-6 md:px-12 md:py-28">
       <div className="mx-auto max-w-7xl">
         {/* Heading */}
         <div className="grid gap-7 md:grid-cols-2 md:gap-10">

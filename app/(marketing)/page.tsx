@@ -35,7 +35,7 @@ const isDesktop = useIsDesktop();
 
                 <HeroSection/>
             </div>
-            <div className="relative  bg-white mx-0.25 ">
+            <div className="relative  mx-0.25 ">
                 <EventSection/>
             </div>
 
