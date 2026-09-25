@@ -1,35 +1,5 @@
 "use client";
-
-/**
- * PhantomInfiniteGallery — GSAP edition
- *
- * Same draggable, infinitely-tiling image grid with arc curvature, inertial
- * throwing, press-to-zoom, and mouse parallax as the Framer Motion version —
- * rewritten so the animation loop never touches React state.
- *
- * WHY GSAP OVER FRAMER MOTION HERE
- * The old version drove offset/inertia/zoom/parallax through `useState` and
- * recomputed + re-rendered ~400 tiles every animation frame. That's a React
- * reconciliation pass at 60fps over a few hundred nodes — the actual
- * bottleneck, not the math. This version:
- *   - keeps position/rotation/scale OUT of React state entirely. GSAP's
- *     ticker drives a loop that writes directly to each tile's transform via
- *     `gsap.quickSetter`, which is a precompiled, allocation-free setter —
- *     no vdom diff, no reconciliation, GPU-composited transforms only.
- *   - never animates `width`/`height` (forces layout/reflow). "Zoom" is
- *     folded into the same `scale()` used for edge fade, applied with
- *     `transform-origin: 0 0` so it composites on the GPU instead of
- *     triggering layout. Trade-off: padding/text visually scale with the
- *     tile instead of staying pixel-fixed — reads basically the same and is
- *     far cheaper.
- *   - only touches React state when the *set of visible tiles* changes
- *     (crossing a cell boundary), not every frame. That's a rare, cheap
- *     re-render instead of a 60fps one.
- *   - drives hover via CSS (`:hover` + a CSS variable) instead of a
- *     per-tile JS animation.
- *
- * Install: `npm install gsap`
- */
+import Image from "next/image";
 
 import React, {
   useRef,
@@ -43,12 +13,12 @@ import { gsap } from "gsap";
 
 type Point = { x: number; y: number };
 type Viewport = { w: number; h: number };
-type GalleryItem = {
+export type GalleryItem = {
   title: string;
   image: { src: string; alt?: string };
   year: number;
 };
-type BorderConfig = {
+export type BorderConfig = {
   width: number;
   style: string;
   color: string;
@@ -59,10 +29,9 @@ type BorderConfig = {
 };
 
 // ---------------------------------------------------------------------------
-// Pure helpers (unchanged math from the Framer version)
+// Pure Helpers
 // ---------------------------------------------------------------------------
 
-/** Keep the same world point under the pointer when the cell size changes. */
 function computePinnedOffset(
   prevSize: number,
   nextSize: number,
@@ -81,7 +50,6 @@ function toRadians(deg: number): number {
   return (deg * Math.PI) / 180;
 }
 
-/** Pseudo-3D "arc wall" transform for a tile at a given center. */
 function calcArcTransform({
   cellCenterX,
   cellCenterY,
@@ -124,21 +92,14 @@ function calcArcTransform({
 const clamp = (v: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, v));
 
-// ---------------------------------------------------------------------------
-// Default content
-// ---------------------------------------------------------------------------
-
 const DEFAULT_ITEMS: GalleryItem[] = [
   { title: "Tealogy", image: { src: "/gallery/image01.jpeg" }, year: 2026 },
-  { title: "organizers", image: { src: "/gallery/image02.jpeg" }, year: 2026 },
-  { title: "games", image: { src: "/gallery/image03.jpeg" }, year: 2026 },
+  { title: "Organizers", image: { src: "/gallery/image02.jpeg" }, year: 2026 },
+  { title: "Games", image: { src: "/gallery/image03.jpeg" }, year: 2026 },
   { title: "Mafia", image: { src: "/gallery/image04.jpeg" }, year: 2026 },
   { title: "Discussions", image: { src: "/gallery/image05.jpeg" }, year: 2026 },
-  { title: "hmmm", image: { src: "/gallery/image06.jpeg" }, year: 2026 },
   { title: "Sunday", image: { src: "/gallery/image08.jpeg" }, year: 2026 },
-  { title: "Fun games", image: { src: "/gallery/image09.jpeg" }, year: 2026 },
-  { title: "Outfoors", image: { src: "/gallery/image10.jpeg" }, year: 2026 },
-  { title: "The Boys", image: { src: "/gallery/image11.jpeg" }, year: 2026 },
+  { title: "Outdoors", image: { src: "/gallery/image10.jpeg" }, year: 2026 },
 ];
 
 const DEFAULT_BORDER: BorderConfig = {
@@ -176,9 +137,6 @@ type PhantomInfiniteGalleryProps = {
   throwMaxSpeed?: number;
 };
 
-const DRAG_THRESHOLD = 4;
-const PRESS_ZOOM_DELAY = 120;
-
 type TileHandle = {
   el: HTMLDivElement;
   qsX: (v: number) => void;
@@ -189,6 +147,9 @@ type TileHandle = {
   qsScale: (v: number) => void;
   qsOpacity: (v: number) => void;
 };
+
+const DRAG_THRESHOLD = 4;
+const PRESS_ZOOM_DELAY = 120;
 
 export default function PhantomInfiniteGallery({
   items = DEFAULT_ITEMS,
@@ -217,7 +178,7 @@ export default function PhantomInfiniteGallery({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const vignetteRef = useRef<HTMLDivElement | null>(null);
 
-  // ---- Animation state lives in refs, NOT React state --------------------
+  // ---- Mutable Refs (Never trigger React Re-renders) --------------------
   const offsetRef = useRef<Point>({ x: 0, y: 0 });
   const targetOffsetRef = useRef<Point>({ x: 0, y: 0 });
   const inertiaRef = useRef<Point>({ x: 0, y: 0 });
@@ -237,43 +198,80 @@ export default function PhantomInfiniteGallery({
   const startOffsetRef = useRef<Point>({ x: 0, y: 0 });
   const pressTimerRef = useRef<number | null>(null);
 
-  // Registry of mounted tile DOM nodes + their precompiled GSAP setters.
   const tileHandlesRef = useRef<Map<string, TileHandle>>(new Map());
 
-  // The only React state that changes at runtime: how many tiles exist and
-  // where the visible window currently starts. Both update rarely — cols/
-  // rows only on resize, startX/startY only when a cell boundary is crossed.
-  const [gridDims, setGridDims] = useState({ cols: 20, rows: 20 });
+  // Grid sizing & bounds state
+  const [gridDims, setGridDims] = useState({ cols: 12, rows: 12 });
   const [windowOrigin, setWindowOrigin] = useState({ startX: 0, startY: 0 });
 
-  const cellWithGapBase = cellSize; // fixed box size; visual zoom is a transform, not a layout change
+  // Store configurable props in refs so Ticker callback doesn't detach/reattach
+  const configRef = useRef({
+    arcAxis,
+    arcMaxAngleDeg,
+    arcAmount,
+    edgeFade,
+    parallaxEnabled,
+    parallaxWhileDragging,
+    parallaxEase,
+    inertiaEnabled,
+    throwFriction,
+    cellSize,
+  });
 
-  // ---- Track container size; also resize the tile window to fit ----------
+  useEffect(() => {
+    configRef.current = {
+      arcAxis,
+      arcMaxAngleDeg,
+      arcAmount,
+      edgeFade,
+      parallaxEnabled,
+      parallaxWhileDragging,
+      parallaxEase,
+      inertiaEnabled,
+      throwFriction,
+      cellSize,
+    };
+  }, [
+    arcAxis,
+    arcMaxAngleDeg,
+    arcAmount,
+    edgeFade,
+    parallaxEnabled,
+    parallaxWhileDragging,
+    parallaxEase,
+    inertiaEnabled,
+    throwFriction,
+    cellSize,
+  ]);
+
+  // Handle Container Resizing
   useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+
     const ro = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
       viewportRef.current = { w: width, h: height };
+
       const minCell = Math.max(1, cellSize * Math.min(1, zoomValue));
-      const cols = Math.ceil(width / minCell) + 10;
-      const rows = Math.ceil(height / minCell) + 10;
+      // Added a padding buffer to prevent seeing pop-ins on fast drag
+      const cols = Math.ceil(width / minCell) + 6;
+      const rows = Math.ceil(height / minCell) + 6;
+
       setGridDims((prev) =>
         prev.cols === cols && prev.rows === rows ? prev : { cols, rows }
       );
     });
+
     ro.observe(el);
     return () => ro.disconnect();
   }, [cellSize, zoomValue]);
 
-  // ---- One-time vignette fade-in (GSAP, not per-frame state) -------------
+  // Vignette Entrance
   useEffect(() => {
-    if (!vignetteRef.current) return;
-    gsap.fromTo(
-      vignetteRef.current,
-      { opacity: 0 },
-      { opacity: 1, duration: 0.8, ease: "power2.out" }
-    );
+    if (vignetteRef.current) {
+      gsap.fromTo(vignetteRef.current, { opacity: 0 }, { opacity: 1, duration: 0.8 });
+    }
   }, []);
 
   const commitInertiaToBase = useCallback(() => {
@@ -286,16 +284,19 @@ export default function PhantomInfiniteGallery({
     inertiaActiveRef.current = false;
   }, []);
 
-  // ---- Main loop: GSAP ticker, writes DOM directly via quickSetters ------
+  // ---------------------------------------------------------------------------
+  // Optimized Main Animation Loop
+  // ---------------------------------------------------------------------------
   useEffect(() => {
     const tick = () => {
+      const cfg = configRef.current;
       const dt = Math.min(0.05, gsap.ticker.deltaRatio(60) / 60);
 
-      // Lerp zoom
+      // Lerp Zoom
       currentCellSizeRef.current +=
         (targetCellSizeRef.current - currentCellSizeRef.current) * 0.15;
 
-      // Lerp base offset only while not actively dragging
+      // Lerp Base Offset (when not dragging)
       if (!draggingRef.current) {
         offsetRef.current.x +=
           (targetOffsetRef.current.x - offsetRef.current.x) * 0.15;
@@ -303,74 +304,75 @@ export default function PhantomInfiniteGallery({
           (targetOffsetRef.current.y - offsetRef.current.y) * 0.15;
       }
 
-      // Inertia
-      if (inertiaEnabled && inertiaActiveRef.current) {
-        const f = Math.pow(throwFriction, dt * 60);
+      // Physics Inertia
+      if (cfg.inertiaEnabled && inertiaActiveRef.current) {
+        const f = Math.pow(cfg.throwFriction, dt * 60);
         velocityRef.current.x *= f;
         velocityRef.current.y *= f;
+
         const speed = Math.hypot(velocityRef.current.x, velocityRef.current.y);
-        if (speed < 1) {
-          const dir = Math.atan2(velocityRef.current.y, velocityRef.current.x);
-          velocityRef.current.x = Math.cos(dir) * 1e-4;
-          velocityRef.current.y = Math.sin(dir) * 1e-4;
+        if (speed < 0.5) {
+          inertiaActiveRef.current = false;
+        } else {
+          inertiaRef.current.x += velocityRef.current.x * dt;
+          inertiaRef.current.y += velocityRef.current.y * dt;
         }
-        inertiaRef.current.x += velocityRef.current.x * dt;
-        inertiaRef.current.y += velocityRef.current.y * dt;
       }
 
-      // Mouse parallax
+      // Parallax
       const wantParallax =
-        parallaxEnabled && (parallaxWhileDragging || !draggingRef.current);
+        cfg.parallaxEnabled && (cfg.parallaxWhileDragging || !draggingRef.current);
       const mtx = wantParallax ? targetMouseOffsetRef.current.x : 0;
       const mty = wantParallax ? targetMouseOffsetRef.current.y : 0;
-      mouseOffsetRef.current.x += (mtx - mouseOffsetRef.current.x) * parallaxEase;
-      mouseOffsetRef.current.y += (mty - mouseOffsetRef.current.y) * parallaxEase;
+      mouseOffsetRef.current.x += (mtx - mouseOffsetRef.current.x) * cfg.parallaxEase;
+      mouseOffsetRef.current.y += (mty - mouseOffsetRef.current.y) * cfg.parallaxEase;
 
       const cellWithGap = currentCellSizeRef.current;
-      const zoomScale = cellWithGap / cellWithGapBase;
+      const zoomScale = cellWithGap / cfg.cellSize;
       const effX =
         offsetRef.current.x + inertiaRef.current.x + mouseOffsetRef.current.x;
       const effY =
         offsetRef.current.y + inertiaRef.current.y + mouseOffsetRef.current.y;
 
-      // Reposition the visible window only when it actually needs to shift.
+      // Reposition Window on Boundary Crossing
       const halfCols = Math.floor(gridDims.cols / 2);
       const halfRows = Math.floor(gridDims.rows / 2);
       const startX = Math.floor(-effX / cellWithGap) - halfCols;
       const startY = Math.floor(-effY / cellWithGap) - halfRows;
+
       if (
         startX !== windowOriginRef.current.startX ||
         startY !== windowOriginRef.current.startY
       ) {
         windowOriginRef.current = { startX, startY };
-        setWindowOrigin({ startX, startY });
+        // Schedule state update outside synchronous loop execution
+        requestAnimationFrame(() => setWindowOrigin({ startX, startY }));
       }
 
       const viewportW = viewportRef.current.w || 1;
       const viewportH = viewportRef.current.h || 1;
 
+      // Direct Batch DOM Update via QuickSetters
       tileHandlesRef.current.forEach((handle, key) => {
-        const [xStr, yStr] = key.split(",");
-        const x = Number(xStr);
-        const y = Number(yStr);
+        const commaIdx = key.indexOf(",");
+        const x = Number(key.slice(0, commaIdx));
+        const y = Number(key.slice(commaIdx + 1));
 
         const tileLeft = x * cellWithGap + effX;
         const tileTop = y * cellWithGap + effY;
-        const cellCenterX = tileLeft + cellWithGap / 2;
-        const cellCenterY = tileTop + cellWithGap / 2;
 
         const { z, yawDeg, pitchDeg, edgeFactor } = calcArcTransform({
-          cellCenterX,
-          cellCenterY,
+          cellCenterX: tileLeft + cellWithGap / 2,
+          cellCenterY: tileTop + cellWithGap / 2,
           viewportW,
           viewportH,
-          arcAxis,
-          arcMaxAngleDeg,
-          arcAmount,
+          arcAxis: cfg.arcAxis,
+          arcMaxAngleDeg: cfg.arcMaxAngleDeg,
+          arcAmount: cfg.arcAmount,
         });
 
-        const edgeScale = 1 - edgeFade * (edgeFactor * edgeFactor);
-        const opacity = 1 - 0.4 * (edgeFactor * arcAmount);
+        const edgeScale = 1 - cfg.edgeFade * (edgeFactor * edgeFactor);
+        const opacity = 1 - 0.4 * (edgeFactor * cfg.arcAmount);
 
         handle.qsX(tileLeft);
         handle.qsY(tileTop);
@@ -383,25 +385,10 @@ export default function PhantomInfiniteGallery({
     };
 
     gsap.ticker.add(tick);
-    return () => {
-      gsap.ticker.remove(tick);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    gridDims,
-    arcAxis,
-    arcMaxAngleDeg,
-    arcAmount,
-    edgeFade,
-    parallaxEnabled,
-    parallaxWhileDragging,
-    parallaxEase,
-    inertiaEnabled,
-    throwFriction,
-    cellWithGapBase,
-  ]);
+    return () => gsap.ticker.remove(tick);
+  }, [gridDims]);
 
-  // If the `cellSize` prop changes externally, re-pin the view around center.
+  // External cellSize change pinning
   useEffect(() => {
     const rect = containerRef.current?.getBoundingClientRect();
     const pivot = rect ? { x: rect.width / 2, y: rect.height / 2 } : { x: 0, y: 0 };
@@ -409,19 +396,16 @@ export default function PhantomInfiniteGallery({
       x: offsetRef.current.x + inertiaRef.current.x,
       y: offsetRef.current.y + inertiaRef.current.y,
     };
-    const newTarget = computePinnedOffset(
+    targetCellSizeRef.current = cellSize;
+    targetOffsetRef.current = computePinnedOffset(
       currentCellSizeRef.current,
       cellSize,
       pivot,
       visibleOffset
     );
-    targetCellSizeRef.current = cellSize;
-    targetOffsetRef.current = newTarget;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cellSize]);
 
-  // ---- Pointer handlers (write refs directly; no per-move setState) ------
-
+  // Pointer Handlers
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       e.preventDefault();
@@ -455,14 +439,13 @@ export default function PhantomInfiniteGallery({
             x: offsetRef.current.x + inertiaRef.current.x,
             y: offsetRef.current.y + inertiaRef.current.y,
           };
-          const pinned = computePinnedOffset(
+          targetCellSizeRef.current = newSize;
+          targetOffsetRef.current = computePinnedOffset(
             currentCellSizeRef.current,
             newSize,
             pivot,
             visibleOffset
           );
-          targetCellSizeRef.current = newSize;
-          targetOffsetRef.current = pinned;
         }
       }, PRESS_ZOOM_DELAY);
     },
@@ -471,8 +454,6 @@ export default function PhantomInfiniteGallery({
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      e.preventDefault();
-
       if (isPressingRef.current) {
         const now = performance.now();
         const dt = Math.max(0.001, (now - lastMoveRef.current.t) / 1000);
@@ -485,19 +466,19 @@ export default function PhantomInfiniteGallery({
         lastMoveRef.current = { x: e.clientX, y: e.clientY, t: now };
       }
 
-      const suppressParallax = isPressingRef.current;
       if (
         parallaxEnabled &&
         (parallaxWhileDragging || !draggingRef.current) &&
         containerRef.current &&
-        !suppressParallax
+        !isPressingRef.current
       ) {
         const rect = containerRef.current.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
-        const reverseX = (rect.width / 2 - mouseX) * parallaxStrength;
-        const reverseY = (rect.height / 2 - mouseY) * parallaxStrength;
-        targetMouseOffsetRef.current = { x: reverseX, y: reverseY };
+        targetMouseOffsetRef.current = {
+          x: (rect.width / 2 - mouseX) * parallaxStrength,
+          y: (rect.height / 2 - mouseY) * parallaxStrength,
+        };
       }
 
       if (!isPressingRef.current) return;
@@ -518,16 +499,25 @@ export default function PhantomInfiniteGallery({
         targetOffsetRef.current = { x: nx, y: ny };
       }
     },
-    [parallaxEnabled, parallaxWhileDragging, parallaxStrength, throwVelocityScale, throwMaxSpeed]
+    [
+      parallaxEnabled,
+      parallaxWhileDragging,
+      parallaxStrength,
+      throwVelocityScale,
+      throwMaxSpeed,
+    ]
   );
 
   const handlePointerUp = useCallback(() => {
     try {
-      if (pointerIdRef.current != null && containerRef.current?.releasePointerCapture) {
+      if (
+        pointerIdRef.current != null &&
+        containerRef.current?.releasePointerCapture
+      ) {
         containerRef.current.releasePointerCapture(pointerIdRef.current);
       }
     } catch {
-      // ignore
+      // Ignore
     }
     isPressingRef.current = false;
     if (pressTimerRef.current) {
@@ -552,29 +542,27 @@ export default function PhantomInfiniteGallery({
       x: offsetRef.current.x + inertiaRef.current.x,
       y: offsetRef.current.y + inertiaRef.current.y,
     };
-    const pinnedBack = computePinnedOffset(
+
+    targetMouseOffsetRef.current = { x: 0, y: 0 };
+    targetCellSizeRef.current = cellSize;
+    targetOffsetRef.current = computePinnedOffset(
       currentCellSizeRef.current,
       cellSize,
       pivot,
       visibleOffset
     );
-    targetMouseOffsetRef.current = { x: 0, y: 0 };
-    targetCellSizeRef.current = cellSize;
-    targetOffsetRef.current = pinnedBack;
   }, [cellSize, inertiaEnabled, throwMinSpeed]);
 
-  const handlePointerLeave = useCallback(() => {
-    targetMouseOffsetRef.current = { x: 0, y: 0 };
-  }, []);
-
-  // ---- Grid cell list: recomputed only when the window/dims change -------
-
+  // Memorized grid rendering keys
   const gridCellKeys = useMemo(() => {
     const keys: { x: number; y: number; key: string; item: GalleryItem }[] = [];
     const { startX, startY } = windowOrigin;
+    const len = items.length || 1;
+
     for (let y = startY; y < startY + gridDims.rows; y++) {
       for (let x = startX; x < startX + gridDims.cols; x++) {
-        const itemIndex = Math.abs((x + y * 3) % items.length);
+        // Safe wrap math for mapping items continuously over spatial negative grid
+        const itemIndex = (((x + y * 3) % len) + len) % len;
         keys.push({ x, y, key: `${x},${y}`, item: items[itemIndex] });
       }
     }
@@ -601,12 +589,23 @@ export default function PhantomInfiniteGallery({
     []
   );
 
-  const borderStyle = {
-    borderTop: border.showTop ? `${border.width}px ${border.style} ${border.color}` : "none",
-    borderLeft: border.showLeft ? `${border.width}px ${border.style} ${border.color}` : "none",
-    borderRight: border.showRight ? `${border.width}px ${border.style} ${border.color}` : "none",
-    borderBottom: border.showBottom ? `${border.width}px ${border.style} ${border.color}` : "none",
-  } as const;
+  const borderStyle = useMemo(
+    () => ({
+      borderTop: border.showTop
+        ? `${border.width}px ${border.style} ${border.color}`
+        : "none",
+      borderLeft: border.showLeft
+        ? `${border.width}px ${border.style} ${border.color}`
+        : "none",
+      borderRight: border.showRight
+        ? `${border.width}px ${border.style} ${border.color}`
+        : "none",
+      borderBottom: border.showBottom
+        ? `${border.width}px ${border.style} ${border.color}`
+        : "none",
+    }),
+    [border]
+  );
 
   return (
     <div
@@ -625,7 +624,9 @@ export default function PhantomInfiniteGallery({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      onPointerLeave={handlePointerLeave}
+      onPointerLeave={() => {
+        targetMouseOffsetRef.current = { x: 0, y: 0 };
+      }}
     >
       <style>{`
         .phantom-gallery-tile {
@@ -639,36 +640,39 @@ export default function PhantomInfiniteGallery({
       `}</style>
 
       <div className="absolute w-full h-full [transform-style:preserve-3d]">
-        {gridCellKeys.map(({ x, y, key, item }) => (
+        {gridCellKeys.map(({ key, item }) => (
           <div
             key={key}
             ref={registerTile(key)}
-            className="phantom-gallery-tile absolute box-border  flex flex-col cursor-pointer"
+            className="phantom-gallery-tile absolute box-border flex flex-col cursor-pointer"
             style={{
               left: 0,
               top: 0,
-              width: cellWithGapBase,
-              height: cellWithGapBase,
+              width: cellSize,
+              height: cellSize,
               ...borderStyle,
               backgroundColor: "rgba(0, 0, 0, 0.1)",
               padding: cellPadding,
             }}
           >
-            <div
-              className="flex-1 rounded"
-              style={{
-                backgroundImage: `url(${item?.image?.src || DEFAULT_ITEMS[0].image.src})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                marginBottom: gap,
-              }}
-            />
+            <div 
+              className="relative flex-1 rounded overflow-hidden" 
+              style={{ marginBottom: gap }}
+            >
+              <Image
+                src={item?.image?.src || DEFAULT_ITEMS[0].image.src}
+                alt={item?.title || "Gallery image"}
+                fill
+                sizes="(max-width: 640px) 180px, 300px"
+                className="object-cover"
+              />
+            </div>
             <div
               className="flex items-center justify-between font-mono text-xs"
               style={{ color: textColor }}
             >
               <span className="font-bold uppercase">{item?.title || "Project"}</span>
-              <span>{item?.year || 2024}</span>
+              <span>{item?.year || 2026}</span>
             </div>
           </div>
         ))}
@@ -680,9 +684,9 @@ export default function PhantomInfiniteGallery({
         style={{
           opacity: 0,
           background:
-            "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.8) 90%, rgba(0,0,0,1) 100%)",
+            "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,1) 100%)",
         }}
       />
     </div>
   );
-}
+} 
