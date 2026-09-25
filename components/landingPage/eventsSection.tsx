@@ -39,16 +39,6 @@ const events = [
     bg: "bg-stone",
     rotation: "md:-rotate-1",
   },
-  {
-    number: "04",
-    title: "Mose kehen lage babba",
-    subtitle: "Le ao chilam tambaku ka dabba",
-    description:
-      "Read, write, draw, talk, crochet, play board games, uno. Do whatever you like.",
-    image: "/hosts-image/palak.png",
-    bg: "bg-[#A7ADEB]",
-    rotation: "md:-rotate-1",
-  },
 ];
 
 export default function EventSection() {
