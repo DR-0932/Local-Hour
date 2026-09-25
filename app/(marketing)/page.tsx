@@ -3,7 +3,6 @@ import UpcomingEventSection from "@/components/events/upcomingEvents";
 import EventSection from "@/components/landingPage/eventsSection";
 import HeroSection from "@/components/landingPage/heroSection";
 import MeetHostSection from "@/components/landingPage/meetHosts";
-import UpcomingEvents from "@/components/landingPage/upcomingEvents";
 import OrbitProjects from "@/components/orbitanimaton/orbitAnimation";
 import OrbitProjectsMobile from "@/components/orbitanimaton/orbitanimationMobile";
 import Navbar from "@/ui/navbar";
