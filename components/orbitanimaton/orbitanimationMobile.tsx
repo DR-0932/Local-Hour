@@ -651,7 +651,7 @@ export default function OrbitProjectsMobile({
  
   // Title / center-copy geometry — also viewport-only, memoized once.
   const headerGeom = React.useMemo(() => {
-    const safeTextWidth = Math.min(Math.max(content.centerTextWidth, 0), vw * 0.5);
+    const safeTextWidth = Math.min(Math.max(content.centerTextWidth, 0), vw * 0.3);
     const titleRest = (safeTextWidth + Math.max(content.titleCenterGap, 0)) / 2;
     return { safeTextWidth, titleRest };
   }, [content.centerTextWidth, content.titleCenterGap, vw]);
