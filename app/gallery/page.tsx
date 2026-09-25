@@ -21,7 +21,7 @@ export default function Page() {
   const isMobile = useIsMobile();
 
   return (
-    <main className=" h-screen w-full  bg-black">
+    <main className=" h-screen w-full  ">
       <Navbar />
        <ParallaxGallery/> 
     </main>
