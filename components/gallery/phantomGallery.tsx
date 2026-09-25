@@ -178,7 +178,6 @@ export default function PhantomInfiniteGallery({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const vignetteRef = useRef<HTMLDivElement | null>(null);
 
-  // ---- Mutable Refs (Never trigger React Re-renders) --------------------
   const offsetRef = useRef<Point>({ x: 0, y: 0 });
   const targetOffsetRef = useRef<Point>({ x: 0, y: 0 });
   const inertiaRef = useRef<Point>({ x: 0, y: 0 });
@@ -200,11 +199,9 @@ export default function PhantomInfiniteGallery({
 
   const tileHandlesRef = useRef<Map<string, TileHandle>>(new Map());
 
-  // Grid sizing & bounds state
   const [gridDims, setGridDims] = useState({ cols: 12, rows: 12 });
   const [windowOrigin, setWindowOrigin] = useState({ startX: 0, startY: 0 });
 
-  // Store configurable props in refs so Ticker callback doesn't detach/reattach
   const configRef = useRef({
     arcAxis,
     arcMaxAngleDeg,
@@ -244,7 +241,6 @@ export default function PhantomInfiniteGallery({
     cellSize,
   ]);
 
-  // Handle Container Resizing
   useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -254,7 +250,6 @@ export default function PhantomInfiniteGallery({
       viewportRef.current = { w: width, h: height };
 
       const minCell = Math.max(1, cellSize * Math.min(1, zoomValue));
-      // Added a padding buffer to prevent seeing pop-ins on fast drag
       const cols = Math.ceil(width / minCell) + 6;
       const rows = Math.ceil(height / minCell) + 6;
 
@@ -267,7 +262,6 @@ export default function PhantomInfiniteGallery({
     return () => ro.disconnect();
   }, [cellSize, zoomValue]);
 
-  // Vignette Entrance
   useEffect(() => {
     if (vignetteRef.current) {
       gsap.fromTo(vignetteRef.current, { opacity: 0 }, { opacity: 1, duration: 0.8 });
@@ -284,19 +278,14 @@ export default function PhantomInfiniteGallery({
     inertiaActiveRef.current = false;
   }, []);
 
-  // ---------------------------------------------------------------------------
-  // Optimized Main Animation Loop
-  // ---------------------------------------------------------------------------
   useEffect(() => {
     const tick = () => {
       const cfg = configRef.current;
       const dt = Math.min(0.05, gsap.ticker.deltaRatio(60) / 60);
 
-      // Lerp Zoom
       currentCellSizeRef.current +=
         (targetCellSizeRef.current - currentCellSizeRef.current) * 0.15;
 
-      // Lerp Base Offset (when not dragging)
       if (!draggingRef.current) {
         offsetRef.current.x +=
           (targetOffsetRef.current.x - offsetRef.current.x) * 0.15;
@@ -304,7 +293,6 @@ export default function PhantomInfiniteGallery({
           (targetOffsetRef.current.y - offsetRef.current.y) * 0.15;
       }
 
-      // Physics Inertia
       if (cfg.inertiaEnabled && inertiaActiveRef.current) {
         const f = Math.pow(cfg.throwFriction, dt * 60);
         velocityRef.current.x *= f;
@@ -319,7 +307,6 @@ export default function PhantomInfiniteGallery({
         }
       }
 
-      // Parallax
       const wantParallax =
         cfg.parallaxEnabled && (cfg.parallaxWhileDragging || !draggingRef.current);
       const mtx = wantParallax ? targetMouseOffsetRef.current.x : 0;
@@ -334,7 +321,6 @@ export default function PhantomInfiniteGallery({
       const effY =
         offsetRef.current.y + inertiaRef.current.y + mouseOffsetRef.current.y;
 
-      // Reposition Window on Boundary Crossing
       const halfCols = Math.floor(gridDims.cols / 2);
       const halfRows = Math.floor(gridDims.rows / 2);
       const startX = Math.floor(-effX / cellWithGap) - halfCols;
@@ -345,14 +331,12 @@ export default function PhantomInfiniteGallery({
         startY !== windowOriginRef.current.startY
       ) {
         windowOriginRef.current = { startX, startY };
-        // Schedule state update outside synchronous loop execution
         requestAnimationFrame(() => setWindowOrigin({ startX, startY }));
       }
 
       const viewportW = viewportRef.current.w || 1;
       const viewportH = viewportRef.current.h || 1;
 
-      // Direct Batch DOM Update via QuickSetters
       tileHandlesRef.current.forEach((handle, key) => {
         const commaIdx = key.indexOf(",");
         const x = Number(key.slice(0, commaIdx));
@@ -388,7 +372,6 @@ export default function PhantomInfiniteGallery({
     return () => gsap.ticker.remove(tick);
   }, [gridDims]);
 
-  // External cellSize change pinning
   useEffect(() => {
     const rect = containerRef.current?.getBoundingClientRect();
     const pivot = rect ? { x: rect.width / 2, y: rect.height / 2 } : { x: 0, y: 0 };
@@ -405,10 +388,8 @@ export default function PhantomInfiniteGallery({
     );
   }, [cellSize]);
 
-  // Pointer Handlers
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      e.preventDefault();
       if (
         inertiaActiveRef.current ||
         inertiaRef.current.x !== 0 ||
@@ -418,7 +399,12 @@ export default function PhantomInfiniteGallery({
       }
 
       pointerIdRef.current = e.pointerId;
-      e.currentTarget.setPointerCapture(e.pointerId);
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // Fallback for older WebKit pointer events
+      }
+
       isPressingRef.current = true;
       draggingRef.current = false;
 
@@ -553,7 +539,6 @@ export default function PhantomInfiniteGallery({
     );
   }, [cellSize, inertiaEnabled, throwMinSpeed]);
 
-  // Memorized grid rendering keys
   const gridCellKeys = useMemo(() => {
     const keys: { x: number; y: number; key: string; item: GalleryItem }[] = [];
     const { startX, startY } = windowOrigin;
@@ -561,7 +546,6 @@ export default function PhantomInfiniteGallery({
 
     for (let y = startY; y < startY + gridDims.rows; y++) {
       for (let x = startX; x < startX + gridDims.cols; x++) {
-        // Safe wrap math for mapping items continuously over spatial negative grid
         const itemIndex = (((x + y * 3) % len) + len) % len;
         keys.push({ x, y, key: `${x},${y}`, item: items[itemIndex] });
       }
@@ -610,13 +594,17 @@ export default function PhantomInfiniteGallery({
   return (
     <div
       ref={containerRef}
-      className="phantom-gallery-root relative w-full h-full overflow-hidden select-none [touch-action:none] [perspective:1000px] [transform-style:preserve-3d]"
+      className="phantom-gallery-root relative w-full h-full overflow-hidden select-none"
       style={
         {
           backgroundColor,
           cursor: "grab",
           touchAction: "none",
+          WebkitTouchCallout: "none",
+          WebkitUserSelect: "none",
           overscrollBehavior: "none",
+          perspective: "1000px",
+          WebkitPerspective: "1000px",
           ["--tile-hover-color" as string]: hoverColor,
         } as React.CSSProperties
       }
@@ -631,15 +619,17 @@ export default function PhantomInfiniteGallery({
       <style>{`
         .phantom-gallery-tile {
           transition: background-color 0.3s ease-out;
-          will-change: transform;
+          will-change: transform, opacity;
           transform-origin: 0 0;
+          -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
         }
         .phantom-gallery-tile:hover {
           background-color: var(--tile-hover-color);
         }
       `}</style>
 
-      <div className="absolute w-full h-full [transform-style:preserve-3d]">
+      <div className="absolute w-full h-full">
         {gridCellKeys.map(({ key, item }) => (
           <div
             key={key}
@@ -653,11 +643,17 @@ export default function PhantomInfiniteGallery({
               ...borderStyle,
               backgroundColor: "rgba(0, 0, 0, 0.1)",
               padding: cellPadding,
+              transformStyle: "preserve-3d",
+              WebkitTransformStyle: "preserve-3d",
             }}
           >
             <div 
               className="relative flex-1 rounded overflow-hidden" 
-              style={{ marginBottom: gap }}
+              style={{ 
+                marginBottom: gap,
+                transform: "translateZ(0)",
+                WebkitTransform: "translateZ(0)",
+              }}
             >
               <Image
                 src={item?.image?.src || DEFAULT_ITEMS[0].image.src}
@@ -665,6 +661,7 @@ export default function PhantomInfiniteGallery({
                 fill
                 sizes="(max-width: 640px) 180px, 300px"
                 className="object-cover"
+                priority={false}
               />
             </div>
             <div
@@ -689,4 +686,4 @@ export default function PhantomInfiniteGallery({
       />
     </div>
   );
-} 
+}
