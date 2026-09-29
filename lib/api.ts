@@ -59,7 +59,7 @@ export async function signup(payload: {
 }
 
 export async function login(payload: { loginIdentifier: string; password: string }) {
-  return request<{userdata: User }>("/api/auth/login", {
+  return request<{ token: string; userdata: User }>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify(payload),
   });
