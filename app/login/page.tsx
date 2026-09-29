@@ -15,26 +15,35 @@ export default function Page() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+ const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setLoading(true);
+  setError("");
 
-    try {
-      const result = await login({
-        loginIdentifier: form.loginIdentifier,
-        password: form.password,
-      });
+  try {
+    const result = await login({
+      loginIdentifier: form.loginIdentifier,
+      password: form.password,
+    });
 
-      localStorage.setItem("user", JSON.stringify(result.userdata));
-      window.location.href = "/admin"
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Login failed";
-      setError(message);
-    } finally {
-      setLoading(false);
+    // Save token alongside userdata so admin middleware/hooks can authenticate
+    if (result.token) {
+      localStorage.setItem("token", result.token);
     }
-  };
+    if (result.userdata) {
+      localStorage.setItem("user", JSON.stringify(result.userdata));
+    }
+
+    // Use Next.js client router instead of window.location
+    router.push("/admin");
+    router.refresh(); // Refreshes server components on the target route
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Login failed";
+    setError(message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f5f5f3] px-4">
