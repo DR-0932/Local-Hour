@@ -24,10 +24,13 @@ export type User = {
   gender: "Male" | "Female" | "Other";  
 };
 
-const BASE = "https://my-backend-seven-alpha.vercel.app";
+const API_URL = (
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  "https://my-backend-seven-alpha.vercel.app"
+).replace(/\/+$/, "");
 
 async function request<T>(path: string, opts?: RequestInit): Promise<T> {
-  const url = path.startsWith("http") ? path : `${BASE}${path}`;
+  const url = path.startsWith("http") ? path : `${API_URL}${path}`;
   
   const res = await fetch(url, {
     headers: { "Content-Type": "application/json" },
@@ -58,13 +61,15 @@ export async function signup(payload: {
   });
 }
 
-export async function login(payload: { loginIdentifier: string; password: string }) {
+export async function login(data: {
+  loginIdentifier: string;
+  password: string;
+}) {
   return request<{ token: string; userdata: User }>("/api/auth/login", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(data),
   });
 }
-
 // ---------- Business (public) ----------
 
 export async function getEvents(): Promise<Event[]> {
