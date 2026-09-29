@@ -24,7 +24,7 @@ export type User = {
   gender: "Male" | "Female" | "Other";  
 };
 
-const BASE = "http://localhost:8080";
+const BASE = "https://my-backend-seven-alpha.vercel.app/";
 
 async function request<T>(path: string, opts?: RequestInit): Promise<T> {
   const url = path.startsWith("http") ? path : `${BASE}${path}`;
