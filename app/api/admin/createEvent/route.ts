@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
-import { getUser } from "@/lib/auth";
+import { getAdmin } from "@/lib/auth";
 import { createEvent } from "@/lib/controllers/adminControllers";
 
 export async function POST(req: Request) {
-  const user = await getUser(req);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const body = await req.json();
-  const result = await createEvent(body, user);
+  const admin = await getAdmin();
+  if (admin.status !== 200)
+    return NextResponse.json({ error: "Forbidden" }, { status: admin.status });
+
+  const body = await req.json().catch(() => null);
+  const result = await createEvent(body);
   return NextResponse.json(result.data, { status: result.status });
 }
