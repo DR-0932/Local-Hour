@@ -24,10 +24,9 @@ export type User = {
   gender: "Male" | "Female" | "Other";  
 };
 
-const API_URL = (
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  "https://my-backend-seven-alpha.vercel.app"
-).replace(/\/+$/, "");
+const API_URL = "";
+
+
 
 async function request<T>(path: string, opts?: RequestInit): Promise<T> {
   const url = path.startsWith("http") ? path : `${API_URL}${path}`;
@@ -102,22 +101,22 @@ export async function createEvent(payload: Partial<Event>) {
   });
 }
 
-export async function rescheduleEvent(id: string, dateOfEvent: string) {
+export async function rescheduleEvent(id: string, startTime: string, endTime: string) {
   return request<{ message: string; event: Event }>(`/api/admin/reschedule/${id}`, {
     method: "PUT",
-    body: JSON.stringify({ dateOfEvent }),
+    body: JSON.stringify({ startTime, endTime }),
   });
 }
 
 export async function hideEvent(id: string) {
-  return request<{ message: string }>(`/api/admin/delete`, {
-    method: "PATCH",
-    body: JSON.stringify({ id }),
-  });
+  return request<{ message: string }>(`/api/admin/hide/${id}`, { method: "PATCH" });
 }
 
 export async function deleteEvent(id: string) {
   return request<{ message: string }>(`/api/admin/event/${id}`, {
     method: "DELETE",
   });
+}
+export async function getParticipants(id: string) {
+  return request<{ count: number; participant_data: any[] }>(`/api/admin/event/${id}/participants`);
 }
