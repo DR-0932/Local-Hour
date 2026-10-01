@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { deleteEvent, getEvents, type Event } from "@/lib/api";
+import { deleteEvent, getEvents, getParticipants, type Event, type Participant } from "@/lib/api";
 
 export default function EventsPanel() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -9,8 +9,11 @@ export default function EventsPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [loadingParticipants, setLoadingParticipants] = useState(false);
 
-  const loadEvents = async () => {
+
+const loadEvents = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -19,7 +22,7 @@ export default function EventsPanel() {
       if (data.length > 0) {
         setSelectedEventId(data[0].id);
       } else {
-        setSelectedEventId(null);
+         setSelectedEventId(null);
       }
     } catch (err: any) {
       setError(err.message || "Failed to load events");
@@ -32,10 +35,26 @@ export default function EventsPanel() {
     loadEvents();
   }, []);
 
+
   const selectedEvent = useMemo(
     () => events.find((event) => event.id === selectedEventId) ?? events[0] ?? null,
     [events, selectedEventId]
   );
+
+  useEffect(() => {
+  if (!selectedEvent?.id) {
+    setParticipants([]);
+    return;
+  }
+  let cancelled = false;
+  setLoadingParticipants(true);
+  getParticipants(selectedEvent.id)
+    .then((res) => { if (!cancelled) setParticipants(res.participant_data); })
+    .catch(() => { if (!cancelled) setParticipants([]); })
+    .finally(() => { if (!cancelled) setLoadingParticipants(false); });
+  return () => { cancelled = true; };
+  }, [selectedEvent?.id]);
+
 
   const handleDelete = async () => {
     if (!selectedEvent) return;
@@ -135,7 +154,27 @@ export default function EventsPanel() {
               <div className="px-4 py-3">Payment</div>
             </div>
 
-            <div className="min-h-[380px] bg-white" />
+            <div className="min-h-[380px] bg-white">
+              {loadingParticipants ? (
+                <p className="px-4 py-3 text-sm text-[#6b7280]">Loading...</p>
+              ) : participants.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-[#6b7280]">No registrations yet.</p>
+              ) : (
+                participants.map((p) => (
+                  <div
+                    key={p.id}
+                    className="grid grid-cols-[1.2fr_1.2fr_1.5fr_1fr] border-b border-[#e5e7eb] text-sm text-[#111827]"
+                  >
+                    <div className="px-4 py-3">{p.name}</div>
+                    <div className="px-4 py-3">{p.phone}</div>
+                    <div className="px-4 py-3 break-all">{p.email}</div>
+                    <div className="px-4 py-3">
+                      {selectedEvent?.registrationFee ? `₹${selectedEvent.registrationFee}` : "Free"}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
