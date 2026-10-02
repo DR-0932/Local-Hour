@@ -1,53 +1,54 @@
-"use client"
-import UpcomingEventSection from "@/components/events/upcomingEvents";
+"use client";
+
 import EventSection from "@/components/landingPage/eventsSection";
 import HeroSection from "@/components/landingPage/heroSection";
 import MeetHostSection from "@/components/landingPage/meetHosts";
 import OrbitProjects from "@/components/orbitanimaton/orbitAnimation";
 import OrbitProjectsMobile from "@/components/orbitanimaton/orbitanimationMobile";
 import Navbar from "@/ui/navbar";
-import { useState,useEffect } from "react";
-
-export default function Page(){
+import { useState, useEffect } from "react";
 
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(min-width: 1024px)"); // 1024px is Tailwind's default 'lg'
-    setIsDesktop(mediaQuery.matches);
-
+    const mq = window.matchMedia("(min-width: 1024px)");
+    setIsDesktop(mq.matches);
     const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
-    mediaQuery.addEventListener("change", handler);
-    return () => mediaQuery.removeEventListener("change", handler);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
   }, []);
 
   return isDesktop;
 }
 
-const isDesktop = useIsDesktop();
-    return(<>
-<main className="wrapper">
-  <div className="content">
-    
-    <div className="relative">
-      <Navbar />
-      <HeroSection />
-    </div>
+export default function Page() {
+  const isDesktop = useIsDesktop();
 
-    <section className="relative">
-      <EventSection />
-    </section>
+  return (
+    <main className="wrapper">
+      <div className="content">
+        {/* Hero: stays pinned behind */}
+        <div className="sticky top-0 z-0   bg-paper">
+          <Navbar />
+          <HeroSection />
+        </div>
 
-    <section className="relative">
-      {isDesktop ? <OrbitProjects /> : <OrbitProjectsMobile />}
-    </section>
+        {/* Everything else slides over it */}
+        <div className="relative z-10">
+          <section className="relative bg-paper">
+            <EventSection />
+          </section>
 
-    <section className="relative bg-white">
-      <MeetHostSection />
-    </section>
+          <section className="relative bg-black">
+            {isDesktop ? <OrbitProjects /> : <OrbitProjectsMobile />}
+          </section>
 
-  </div>
-</main>
-    </>)
+          <section className="relative bg-white">
+            <MeetHostSection />
+          </section>
+        </div>
+      </div>
+    </main>
+  );
 }
