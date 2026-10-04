@@ -44,7 +44,7 @@ const events = [
     title: "Or Be A Part Of Events",
     subtitle: "Silly games & Offline events",
     description: "Check out events section to see upcoming events",
-    image: "/playcards/tablecorner.jpeg",
+    image: "club/all_ages.jpg",
     bg: "bg-[#91b2ff]",
     rotation: "md:-rotate-1",
   },
@@ -58,69 +58,96 @@ export default function EventSection() {
   useGSAP(() => {
     const heading = gsap.utils.toArray<HTMLElement>(".heading-line");
     const copy = gsap.utils.toArray<HTMLElement>(".copy-line");
+    const cards = gsap.utils.toArray<HTMLElement>(".card-item");
 
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: sectionRef.current,
-        start: "top 90%",
-        end: "bottom 20%",
-        scrub: 0.8,
+        start: "top top",
+        end: "+=300%",
+        scrub: 1,
+        pin:true,
+        anticipatePin:1,
       },
     });
 
     tl.fromTo(
-      copy,
-      { y: 100, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1, stagger: 0.2, ease: "power3.out" }
-    ).fromTo(
       heading,
       { y: 60, opacity: 0 },
       { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
-      0.15
-    );
-  }, { scope: sectionRef });
+  
+    ).fromTo(
+      copy,
+      { y: 100, opacity: 0 },
+      { y: 0, opacity: 1, duration: 3, ease: "power3.out" },
+      "<0.2"
+    )
 
-  return (
-    <section ref={sectionRef} className="overflow-hidden bg-neutral-900 rounded-t-[56px] px-5 py-20 text-white sm:px-6 md:px-12 md:py-28">
-      <div className="mx-auto max-w-7xl">
-        {/* Heading */}
-        <div className="grid gap-7 md:grid-cols-2 md:gap-10">
-          <div>
-            <h2 className="heading-line mt-5 max-w-xl text-5xl font-medium leading-[0.9] tracking-[-0.05em] sm:text-6xl md:text-7xl">
-              Pick your
-              <br />
-              experience.
-            </h2>
-          </div>
-          <div className="flex items-end">
-            <p className="copy-line max-w-md text-base leading-7 text-[#df88f2]">
-              How our sundays look. <br /> Play something cool, sing some songs, or pick a hobby to spend your time however you want.
-            </p>
-          </div>
-        </div>
+    .fromTo(
+      cards,
+      { y:150, opacity:0},
+      { y:0, opacity:1, duration:3,ease:"power3.out"},
+      "<0.7"
+    )
 
-        {/* Cards */}
-        <div
-          className="relative mx-auto mt-12 flex max-w-[1100px] flex-col gap-5 md:mt-24 md:min-h-[600px] md:flex-row md:items-start md:justify-center md:gap-0"
-          onMouseLeave={() => setHovered(null)}
-        >
-          {events.map((event, index) => (
-            <LandingPageEventCard
-              key={event.title}
-              {...event}
-              index={index}
-              hovered={hovered}
-              onHover={setHovered}
-              onClick={() => router.push("/event")}
-            />
-          ))}
-        </div>
+    .to({},{duration:1})
 
-        {/* Bottom */}
-        <div className="mt-10 flex flex-col  jusgap-3 border-t border-ash pt-6 md:mt-8 md:flex-row md:items-center md:justify-between ">
-          <p className="text-2xl font-medium">No phones during club hours.</p>
+    .to(cards,{
+      y:-200, opacity:0,duration:1,ease:"power2.in"
+    },"<0.2");
+
+
+  }, { scope: sectionRef }
+
+
+
+);
+
+  
+
+return (
+  <section
+    ref={sectionRef}
+    className="overflow-hidden bg-[#171717]  px-5 py-12 text-white sm:px-6 md:flex md:h-screen md:items-center md:px-12 md:py-10"
+  >
+    <div className="mx-auto w-full max-w-6xl">
+      {/* Heading */}
+      <div className="grid gap-5 md:grid-cols-2 md:gap-10">
+        <h2 className="heading-line max-w-xl text-4xl font-medium leading-[0.9] tracking-[-0.05em] sm:text-3xl md:text-3xl pt-12">
+          Pick your
+          <br />
+          experience.
+        </h2>
+        <div className="flex items-end">
+          <p className="copy-line max-w-md text-sm leading-6 text-[#df88f2] md:text-base">
+            How our sundays look. <br /> Play something cool, sing some songs, or pick a hobby to spend your time however you want.
+          </p>
         </div>
       </div>
-    </section>
-  );
+
+      {/* Cards */}
+      <div
+      style={{ zoom: 0.75 }}
+        className="card-item relative mx-auto mt-8 flex max-w-[700px] flex-col gap-5 md:mt-10 md:min-h-[360px] md:flex-row md:items-start md:justify-center md:gap-0"
+        onMouseLeave={() => setHovered(null)}
+      >
+        {events.map((event, index) => (
+          <LandingPageEventCard
+            key={event.title}
+            {...event}
+            index={index}
+            hovered={hovered}
+            onHover={setHovered}
+            onClick={() => router.push("/event")}
+          />
+        ))}
+      </div>
+
+      {/* Bottom */}
+      <div className="mt-6 flex flex-col gap-3 border-t border-ash pt-4 md:mt-6 md:flex-row md:items-center md:justify-between">
+        <p className="card-item text-xl font-medium md:text-2xl">No phones during club hours.</p>
+      </div>
+    </div>
+  </section>
+);
 }

@@ -1,4 +1,12 @@
 import Image from "next/image";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/all";
+import { useRef } from "react";
+import gsap from "gsap";
+gsap.registerPlugin(ScrollTrigger);
+
+
+
 
 const hosts = [
   {
@@ -20,40 +28,80 @@ const hosts = [
 ];
 
 export default function MeetHostSection() {
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(()=>{
+    const heading =gsap.utils.toArray(".heading-line");
+    const mintyBox = gsap.utils.toArray(".second-line");
+
+    const tl = gsap.timeline({
+      scrollTrigger:{
+        trigger:sectionRef.current,
+        start:"top 95%",
+        end:"bottom 100%",
+        scrub:1,
+      },
+    });
+
+    tl.fromTo(
+      heading,
+      { y:150, opacity:0},
+      { y: 0, opacity: 1, duration:4,stagger:0.1,ease:"power3.out"}
+    ).fromTo(
+      mintyBox,
+      { x:150, opacity:0 },
+      { x: 0, opacity: 1, duration:3,stagger:0.2,ease:"power3.out"},
+      "0.2"
+
+    )
+  },{scope:sectionRef})
+  
+
+
+
+
+
+
+
+
+
   return (
-    <section className="overflow-hidden bg-paper px-5 py-16 sm:px-6 md:px-12 md:py-28 lg:px-16">
+    <section ref={sectionRef} className="overflow-hidden bg-paper px-5 py-16 sm:px-6 md:px-12 md:py-28 lg:px-16">
       <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col gap-6 border-b border-stone pb-8 md:flex-row md:items-end md:justify-between md:gap-8 md:pb-12">
+        {/* Section heading */}
+        <div  className="flex flex-col gap-6 border-b border-stone pb-8 md:flex-row md:items-end md:justify-between md:gap-8 md:pb-12">
           <div>
-          <p className="text-[11px] uppercase tracking-[0.25em] text-graphite">
+          <p className="heading-line text-[11px] uppercase tracking-[0.25em] text-graphite">
             [ The people behind it ]
           </p>
 
-          <h2 className="mt-4 max-w-3xl text-4xl font-normal leading-[0.92] tracking-[-0.05em] text-ink sm:text-5xl md:text-6xl lg:text-7xl">
+          <h2 className=" heading-line mt-4 max-w-3xl text-4xl font-normal leading-[0.92] tracking-[-0.05em] text-ink sm:text-5xl md:text-6xl lg:text-7xl">
             Meet Your Hosts.
           </h2>
         </div>
 
-          <p className="max-w-[300px] text-sm leading-6 text-graphite">
+          <p className="heading-line max-w-[300px] text-sm leading-6 text-graphite">
             Two people who wanted to create a place where meeting someone new
             could be as simple as showing up.
           </p>
         </div>
 
-        <div className="mt-8 grid gap-6 border-2 border-ink bg-surface p-5 shadow-[6px_6px_0px_var(--ink-shadow)] sm:p-6 md:mt-12 md:grid-cols-[1.15fr_0.85fr] md:gap-8 md:p-9 md:shadow-[8px_8px_0px_var(--ink-shadow)]">
+        <div  className=" mt-8 grid gap-6 border-2 border-ink bg-surface p-5 shadow-[6px_6px_0px_var(--ink-shadow)] sm:p-6 md:mt-12 md:grid-cols-[1.15fr_0.85fr] md:gap-8 md:p-9 md:shadow-[8px_8px_0px_var(--ink-shadow)]">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-graphite">
+            <p className="second-line text-[22px] font-semibold uppercase tracking-[0.22em] text-graphite py-6">
               The localHour rule
             </p>
-            <h3 className="mt-5 max-w-xl text-4xl font-semibold leading-[0.86] tracking-[-0.065em] text-ink sm:text-5xl md:text-7xl">
-              Anti<br />brain-rot.
-            </h3>
-          </div>
-          <div className="flex flex-col justify-between border-t border-ink pt-5 md:border-l md:border-t-0 md:pl-8 md:pt-0">
-            <p className="max-w-sm text-base leading-6 text-ink sm:text-lg sm:leading-7">
+                        <p className="max-w-sm text-base leading-6 text-ink sm:text-lg sm:leading-7">
               Put the phone away. Trade the endless scroll for a real room, a
               real conversation, and a Sunday you&apos;ll actually remember.
             </p>
+          
+          </div>
+          <div className="second-line flex flex-col justify-between border-t border-ink pt-5 md:border-l md:border-t-0 md:pl-8 md:pt-0">
+            <h3 className=" mt-5 max-w-xl text-4xl font-semibold leading-[0.86] tracking-[-0.065em] text-ink sm:text-5xl md:text-7xl">
+              Anti<br />brain-rot.
+            </h3>
+            
             <p className="mt-8 font-mono text-xs uppercase tracking-[0.16em] text-graphite">
               No phones during club hours
             </p>

@@ -72,6 +72,27 @@ export const PALETTE = {
   cream: "#fcf8ec",
 };
 
+/* ─── Typography tester ───────────────────────────────────────────
+ * Change ONE value: ACTIVE_FONT. It applies to every card.
+ */
+export const FONT_PRESETS = {
+  site:      { title: "inherit", body: "inherit", small: "inherit" },
+  grotesk:   { title: '"Space Grotesk", sans-serif', body: '"Inter", sans-serif', small: '"JetBrains Mono", monospace' },
+  serif:     { title: '"Playfair Display", serif', body: '"Inter", sans-serif', small: 'ui-monospace, Menlo, monospace' },
+  editorial: { title: '"Instrument Serif", serif', body: '"DM Sans", sans-serif', small: '"DM Mono", monospace' },
+  bold:      { title: '"Syne", sans-serif', body: '"Manrope", sans-serif', small: '"Space Mono", monospace' },
+  mono:      { title: '"JetBrains Mono", monospace', body: '"JetBrains Mono", monospace', small: '"JetBrains Mono", monospace' },
+} as const;
+
+export type FontPresetName = keyof typeof FONT_PRESETS;
+
+// 👇 change this one line to test
+export const ACTIVE_FONT: FontPresetName = "grotesk";
+
+const F = FONT_PRESETS[ACTIVE_FONT];
+
+
+
 /* Defaults applied to every card. Override any of these inside a card. */
 export const CARD_TEXT_DEFAULTS = {
   // colour
@@ -91,7 +112,7 @@ export const CARD_TEXT_DEFAULTS = {
   titleTracking: "-0.05em",
   bodySize: 3.3,
   bodyWidth: 78, // % of the card's inner width
-  smallSize: 2.8,
+  smallSize: 3.9,
 
   // layout
   padding: 6, // cqw
@@ -101,57 +122,66 @@ export const CARD_TEXT_DEFAULTS = {
   // photo overlay
   overlay: 0.5,
   overlayFrom: "bottom",
+
+  
 };
 
 export const ORBIT_CARDS = [
   {
-    image: "/club/image01.jpeg",
+    image: "/club/image09.jpeg",
     label: "Our mission",
-    smallSize:3,
+    smallSize:3.9,
     eyebrow: "Our mission",
-    title: "Disconnect with screens and scrolls and connect more with people and surroundings.",
+    footerRight: "Disconnect from screens and connect with people and surroundings.",
+    titlePosition: "center",
     titleSize: 6.5,
-    titleWeight: 400,
-    titleColor:PALETTE.mint,
+    titleWeight: 520,
+    // titleColor:PALETTE.mint,
     body: "We create welcoming spaces for people.",
-    bodySize:3,
+    bodySize:4,
     padding:10,
+    align:"right",
     // footerLeft: "New people",
-    footerRight: "Brighter Sundays",
+    // title: "Local-Hour",
     accent: PALETTE.mint,
     overlay: 0.6,
     overlayFrom: "full",
+    titleFont: F.title,
+    bodyFont: F.body,
+    smallFont: F.small,
 
   },
 
   {
-    image: "/club/image08.jpeg",
+    image: "/club/all_ages.jpg",
     label: "Who is it for",
-    smallSize:3.8,
+    smallSize:3.9,
     eyebrow: "Who is it for?",
-    title: "All Ages.",
-    titleSize: 8,
-    titleWeight: 600,
-    titlePosition: "center",
+    // title: "All Ages.",
+    titleSize: 5,
+    titleWeight:  600,
+    titlePosition: "left",
+    align:        "left", 
     titleColor: "#f1c2ff",
-    align: "left",
-    body: "Open to all age groups and experience levels",
-    bodySize:4,
+    title: "Open to all age groups and experience levels",
+    bodySize:3,
     bodyWidth: 82,
     accent: "#f1c2ff",
-    overlay: 0.6,
+    overlay: 0.45,
     overlayFrom: "full",
     footerRight: "Waiting for you",
-
+    titleFont: F.title,
+    bodyFont: F.body,
+    smallFont: F.small,
 
   },
 
   {
-    image: "/club/image05.jpeg",
+    image: "/club/every_sunday.jpg",
     label: "General sessions",
     eyebrow: "General sessions",
     title: "Every\nSunday",
-    titleSize: 15,
+    titleSize: 12,
     titleWeight: 700,
     titleLeading: 0.88,
     titleColor: PALETTE.orange,
@@ -161,26 +191,34 @@ export const ORBIT_CARDS = [
     bodySize: 4.6,
     footerLeft: "Unless an event states otherwise",
     accent: PALETTE.orange,
-    overlay: 0.6,
+    overlay: 0.35,
     overlayFrom: "full",
+    smallSize: 3.9,
+    titleFont: F.title,
+    bodyFont: F.body,
+    smallFont: F.small,
   },
 
   {
-    image: "/club/image11.jpeg",
+    image: "/club/tealogy.jpg",
     label: "Find us at Tealogy",
     eyebrow: "Find us",
     title: "Tealogy",
+    smallSize:3.9,
     titleSize: 15,
-    body: "Makronia, Sagar",
+    body: "Yaar mera kulhad",
     bodySize: 4.4,
-    footerRight: "☕",
+    footerRight: "Makronia,Sagar☕",
     accent: PALETTE.cream,
     overlay: 0.55,
     overlayFrom: "full",
+    titleFont: F.title,
+    bodyFont: F.body,
+    smallFont: F.small,  
   },
 
   {
-    image: "/club/image03.jpeg",
+    image: "/club/inviteonly.jpg",
     label: "Invite Only",
     // link: "https://chat.whatsapp.com/YOUR-INVITE-LINK",
     eyebrow: "",
@@ -190,18 +228,24 @@ export const ORBIT_CARDS = [
     footerRight: "Invite Only",
     accent: PALETTE.lilac,
     overlay: 0.9,
+    titleFont: F.title,
+    bodyFont: F.body,
+    smallFont: F.small,  
   },
 
   {
-    image: "/club/image06.jpeg",
+    image: "/club/community.jpg",
     label: "Join the community",
     // link: "/join",
-    eyebrow: "Join us",
+    eyebrow: "Local-Hour",
     title: "Be part of\nour community ♡",
     titleSize: 10.5,
     titleWeight: 400,
-    footerRight: "Join now →",
+    // footerRight: "Join now →",
     accent: PALETTE.mint,
-    overlay: 0.55,
+    overlay: 0.8,
+    titleFont: F.title,
+    bodyFont: F.body,
+    smallFont: F.small,
   },
 ];

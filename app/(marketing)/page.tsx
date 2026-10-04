@@ -1,5 +1,6 @@
 "use client";
 
+import CtaSection from "@/components/cta/calltoaction";
 import EventSection from "@/components/landingPage/eventsSection";
 import HeroSection from "@/components/landingPage/heroSection";
 import MeetHostSection from "@/components/landingPage/meetHosts";
@@ -29,22 +30,25 @@ export default function Page() {
     <main className="wrapper">
       <div className="content">
         {/* Hero: stays pinned behind */}
-        <div className="sticky top-0 z-0   bg-paper">
+        <div className="sticky top-0 z-0    bg-paper " >
           <Navbar />
           <HeroSection />
         </div>
 
         {/* Everything else slides over it */}
-        <div className="relative z-10">
+        <div className="relative z-10 ">
           <section className="relative bg-paper">
             <EventSection />
           </section>
 
-          <section className="relative bg-black">
-            {isDesktop ? <OrbitProjects /> : <OrbitProjectsMobile />}
+          <section className="relative z-10 bg-paper  ">
+            {isDesktop ? <OrbitProjects background="#171717"/> : <OrbitProjectsMobile />}
+          </section>
+          <section>
+            <CtaSection/>
           </section>
 
-          <section className="relative bg-white">
+          <section className="relative bg-white mt-40">
             <MeetHostSection />
           </section>
         </div>

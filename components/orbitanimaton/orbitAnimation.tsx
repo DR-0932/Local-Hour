@@ -136,20 +136,20 @@ const DEFAULT_ITEMS: OrbitCardItem[] = ORBIT_CARDS;
 
 const DEFAULT_CONTENT: OrbitContentConfig = {
   showCopy: true,
-  textColor: "#242424",
+  textColor: "#F0E4E4",
   leftTitle: "Local",
   rightTitle: "Hour",
   desktopTitleFont: { fontSize: 144, fontWeight: 400, lineHeight: 0.86, letterSpacing: "-0.075em" },
   compactTitleFont: { fontSize: 72, fontWeight: 400, lineHeight: 0.9, letterSpacing: "-0.065em" },
   titleCenterGap: 32,
-  centerText: ".",
+  centerText: "No phones allowed",
   centerTextWidth: 220,
   compactTextGap: 28,
-  centerFont: { fontSize: 12, fontWeight: 500, lineHeight: 1.05, letterSpacing: "-0.035em" },
+  centerFont: { fontSize: 18, fontWeight: 500, lineHeight: 1.05, letterSpacing: "-0.035em" },
 };
 
 const DEFAULT_CARDS: OrbitCardsConfig = {
-  background: "#fff7ed",
+  background: "#000000",
   radius: 16,
   aspect: 1.3,
   imageFit: "cover",
@@ -486,7 +486,7 @@ function GridLayout({
 
 export default function OrbitProjects({
   items = DEFAULT_ITEMS,
-  background = "#D4D4D4",
+  background = "#ffff",
   content: contentProp,
   cards: cardsProp,
   motion: motionProp,
@@ -574,12 +574,12 @@ export default function OrbitProjects({
   return (
     <section
       ref={rootRef}
-      className={`relative w-full ${className}`}
+      className={`relative w-full   ${className}`}
       style={{ height: `${Math.max(config.scrollLength, 120)}vh`, background }}
     >
       <div
         ref={viewportRef}
-        className="sticky top-0 isolate w-full overflow-hidden [transform-style:preserve-3d]"
+        className="sticky top-0 isolate w-full overflow-hidden [transform-style:preserve-3d] rounded-b-[36px]"
         style={{
           height: "100svh",
           minHeight: 600,
