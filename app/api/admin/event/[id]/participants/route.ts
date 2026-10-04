@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAdmin } from "@/lib/auth";
 import { getParticipants } from "@/lib/controllers/adminControllers";
+import { deleteEvent } from "@/lib/controllers/adminControllers";
+import { revalidateTag } from "next/cache";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const admin = await getAdmin();
@@ -10,3 +12,4 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const result = await getParticipants(id);
   return NextResponse.json(result.data, { status: result.status });
 }
+

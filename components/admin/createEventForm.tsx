@@ -1,16 +1,26 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createEvent } from "@/lib/api"; // adjust path to where createEvent lives
 
-const DEFAULTS = {
-  venue: "Tealogy Makronia",
-  venueLink: "https://maps.app.goo.gl/HD8t5YLFozFus5EK8",
+const INITIAL = {
+  title: "",
+  description: "",
+  date: "",
+  startTime: "",
+  endTime: "",
   slots: "25",
   registrationFee: "0",
+  venue: "Tealogy Makronia",
+  venueLink: "https://maps.app.goo.gl/HD8t5YLFozFus5EK8",
 };
 
-type Errors = Partial<Record<string, string>>;
+type FormState = typeof INITIAL;
+type Errors = Partial<Record<keyof FormState | "image", string>>;
+
+const MAX_IMAGE_SIZE = 4 * 1024 * 1024; // 4MB
+
+/* ---------- helpers ---------- */
 
 // dd/mm/yy -> { y, m, d } or null
 function parseDate(value: string) {
@@ -30,14 +40,15 @@ function parseDate(value: string) {
   return { y, m, d };
 }
 
-// Auto-insert slashes while typing: 240926 -> 24/09/26
+// 240926 -> 24/09/26
 function maskDate(raw: string) {
   const digits = raw.replace(/\D/g, "").slice(0, 6);
-  const parts = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 6)];
-  return parts.filter(Boolean).join("/");
+  return [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 6)]
+    .filter(Boolean)
+    .join("/");
 }
 
-// dd/mm/yy -> yyyy-mm-dd (for the native calendar)
+// dd/mm/yy -> yyyy-mm-dd (native calendar)
 function toIsoDate(value: string) {
   const p = parseDate(value);
   if (!p) return "";
@@ -56,10 +67,28 @@ function toDateTime(date: { y: number; m: number; d: number }, time: string) {
   return new Date(date.y, date.m - 1, date.d, hh, mm);
 }
 
+function isHttpUrl(value: string) {
+  try {
+    return /^https?:$/.test(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+}
+
+async function uploadImage(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data?.url) throw new Error(data?.error ?? "Image upload failed");
+  return data.url as string;
+}
+
+/* ---------- ui ---------- */
+
 const inputClass =
   "w-full rounded-xl border border-[#dfe3e8] bg-[#f9fafb] px-4 py-3 text-base text-[#111827] outline-none transition placeholder:text-[#9ca3af] focus:border-[#60a5fa] focus:ring-2 focus:ring-[#60a5fa]/20";
 const labelClass = "mb-2 block text-sm font-medium text-[#374151]";
-const errorClass = "mt-1.5 text-sm text-[#dc2626]";
 
 function Field({
   label,
@@ -81,30 +110,48 @@ function Field({
       </label>
       {children}
       {hint && !error && <p className="mt-1.5 text-sm text-[#6b7280]">{hint}</p>}
-      {error && <p className={errorClass}>{error}</p>}
+      {error && <p className="mt-1.5 text-sm text-[#dc2626]">{error}</p>}
     </div>
   );
 }
 
-export default function CreateEventForm() {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
-  const datePickerRef = useRef<HTMLInputElement>(null);
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [slots, setSlots] = useState(DEFAULTS.slots);
-  const [venue, setVenue] = useState(DEFAULTS.venue);
-  const [venueLink, setVenueLink] = useState(DEFAULTS.venueLink);
-  const [image, setImage] = useState("");
-  const [registrationFee, setRegistrationFee] = useState(DEFAULTS.registrationFee);
+/* ---------- form ---------- */
 
+export default function CreateEventForm() {
+  const [form, setForm] = useState<FormState>(INITIAL);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [fileKey, setFileKey] = useState(0); // resets the file input
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+  const datePickerRef = useRef<HTMLInputElement>(null);
+
+  // image preview
+  useEffect(() => {
+    if (!imageFile) {
+      setPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(imageFile);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
+
+  function setField(key: keyof FormState, value: string) {
+    setForm((f) => ({ ...f, [key]: value }));
+    setErrors((e) => (e[key] ? { ...e, [key]: undefined } : e));
+  }
+
+  const onChange =
+    (key: keyof FormState) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setField(key, e.target.value);
 
   function validate() {
     const e: Errors = {};
+    const { title, description, date, startTime, endTime, slots, venue, venueLink, registrationFee } = form;
+
     if (!title.trim()) e.title = "Enter an event title.";
     if (!description.trim()) e.description = "Enter a description.";
 
@@ -113,28 +160,17 @@ export default function CreateEventForm() {
 
     if (!startTime) e.startTime = "Pick a start time.";
     if (!endTime) e.endTime = "Pick an end time.";
-    if (startTime && endTime && endTime <= startTime) {
-      e.endTime = "End time must be after start time.";
-    }
+    else if (startTime && endTime <= startTime) e.endTime = "End time must be after start time.";
 
     const slotsNum = Number(slots);
     if (!Number.isInteger(slotsNum) || slotsNum < 1) e.slots = "Enter a whole number, 1 or more.";
 
     if (!venue.trim()) e.venue = "Enter a venue.";
+    if (!isHttpUrl(venueLink)) e.venueLink = "Enter a valid link.";
 
-    try {
-      const url = new URL(venueLink);
-      if (!/^https?:$/.test(url.protocol)) throw new Error();
-    } catch {
-      e.venueLink = "Enter a valid link.";
-    }
-
-    try {
-      const url = new URL(image);
-      if (!/^https?:$/.test(url.protocol)) throw new Error();
-    } catch {
-      e.image = "Enter a valid image link.";
-    }
+    if (!imageFile) e.image = "Select an image.";
+    else if (!imageFile.type.startsWith("image/")) e.image = "File must be an image.";
+    else if (imageFile.size > MAX_IMAGE_SIZE) e.image = "Max 4MB.";
 
     const fee = Number(registrationFee);
     if (registrationFee.trim() === "" || Number.isNaN(fee) || fee < 0) {
@@ -150,34 +186,28 @@ export default function CreateEventForm() {
     setStatus(null);
 
     const { ok, parsed } = validate();
-    if (!ok || !parsed) return;
+    if (!ok || !parsed || !imageFile) return;
 
     setSubmitting(true);
     try {
-      // Same shape as the payload that works in Postman
+      const imageUrl = await uploadImage(imageFile);
+
       await createEvent({
-        title: title.trim(),
-        description: description.trim(),
-        startTime: toDateTime(parsed, startTime).toISOString(),
-        endTime: toDateTime(parsed, endTime).toISOString(),
-        venue: venue.trim(),
-        venueLink: venueLink.trim(),
-        numberOfParticipants: Number(slots),
-        image: image.trim(),
-        registrationFee: Number(registrationFee),
+        title: form.title.trim(),
+        description: form.description.trim(),
+        startTime: toDateTime(parsed, form.startTime).toISOString(),
+        endTime: toDateTime(parsed, form.endTime).toISOString(),
+        venue: form.venue.trim(),
+        venueLink: form.venueLink.trim(),
+        numberOfParticipants: Number(form.slots),
+        image: imageUrl,
+        registrationFee: Number(form.registrationFee),
       } as any);
 
       setStatus({ type: "ok", text: "Event created." });
-      setTitle("");
-      setDescription("");
-      setDate("");
-      setStartTime("");
-      setEndTime("");
-      setSlots(DEFAULTS.slots);
-      setVenue(DEFAULTS.venue);
-      setVenueLink(DEFAULTS.venueLink);
-      setImage("");
-      setRegistrationFee(DEFAULTS.registrationFee);
+      setForm(INITIAL);
+      setImageFile(null);
+      setFileKey((k) => k + 1);
       setErrors({});
     } catch (err) {
       setStatus({
@@ -205,20 +235,15 @@ export default function CreateEventForm() {
 
         <div className="space-y-6">
           <Field label="Event title" htmlFor="title" error={errors.title}>
-            <input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className={inputClass}
-            />
+            <input id="title" value={form.title} onChange={onChange("title")} className={inputClass} />
           </Field>
 
           <Field label="Description" htmlFor="description" error={errors.description}>
             <textarea
               id="description"
               rows={5}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={form.description}
+              onChange={onChange("description")}
               className={`${inputClass} resize-none`}
             />
           </Field>
@@ -231,8 +256,8 @@ export default function CreateEventForm() {
                   inputMode="numeric"
                   placeholder="dd/mm/yy"
                   maxLength={8}
-                  value={date}
-                  onChange={(e) => setDate(maskDate(e.target.value))}
+                  value={form.date}
+                  onChange={(e) => setField("date", maskDate(e.target.value))}
                   className={`${inputClass} pr-12`}
                 />
                 <button
@@ -256,34 +281,36 @@ export default function CreateEventForm() {
                     <path d="M16 2v4M8 2v4M3 10h18" />
                   </svg>
                 </button>
-                {/* Hidden native calendar; shows the picker, writes back as dd/mm/yy */}
+                {/* hidden native calendar, writes back as dd/mm/yy */}
                 <input
                   ref={datePickerRef}
                   type="date"
                   tabIndex={-1}
                   aria-hidden="true"
-                  value={toIsoDate(date)}
-                  onChange={(e) => setDate(fromIsoDate(e.target.value))}
+                  value={toIsoDate(form.date)}
+                  onChange={(e) => setField("date", fromIsoDate(e.target.value))}
                   className="pointer-events-none absolute bottom-0 right-0 h-0 w-0 opacity-0"
                 />
               </div>
             </Field>
+
             <Field label="Start time" htmlFor="startTime" error={errors.startTime}>
               <input
                 id="startTime"
                 type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
+                value={form.startTime}
+                onChange={onChange("startTime")}
                 className={inputClass}
               />
             </Field>
+
             <Field label="End time" htmlFor="endTime" error={errors.endTime}>
               <input
                 id="endTime"
                 type="time"
-                value={endTime}
-                min={startTime || undefined}
-                onChange={(e) => setEndTime(e.target.value)}
+                value={form.endTime}
+                min={form.startTime || undefined}
+                onChange={onChange("endTime")}
                 className={inputClass}
               />
             </Field>
@@ -296,11 +323,12 @@ export default function CreateEventForm() {
                 type="number"
                 min={1}
                 step={1}
-                value={slots}
-                onChange={(e) => setSlots(e.target.value)}
+                value={form.slots}
+                onChange={onChange("slots")}
                 className={inputClass}
               />
             </Field>
+
             <Field
               label="Registration fee (₹)"
               htmlFor="registrationFee"
@@ -312,8 +340,8 @@ export default function CreateEventForm() {
                 type="number"
                 min={0}
                 step="any"
-                value={registrationFee}
-                onChange={(e) => setRegistrationFee(e.target.value)}
+                value={form.registrationFee}
+                onChange={onChange("registrationFee")}
                 className={inputClass}
               />
             </Field>
@@ -321,42 +349,47 @@ export default function CreateEventForm() {
 
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Venue" htmlFor="venue" error={errors.venue}>
-              <input
-                id="venue"
-                value={venue}
-                onChange={(e) => setVenue(e.target.value)}
-                className={inputClass}
-              />
+              <input id="venue" value={form.venue} onChange={onChange("venue")} className={inputClass} />
             </Field>
+
             <Field label="Google Maps link" htmlFor="venueLink" error={errors.venueLink}>
               <input
                 id="venueLink"
                 type="url"
-                value={venueLink}
-                onChange={(e) => setVenueLink(e.target.value)}
+                value={form.venueLink}
+                onChange={onChange("venueLink")}
                 className={inputClass}
               />
             </Field>
           </div>
 
-          <Field label="Image link" htmlFor="image" error={errors.image}>
+          <Field label="Event image" htmlFor="image" error={errors.image} hint="JPG or PNG, max 4MB.">
             <input
+              key={fileKey}
               id="image"
-              type="url"
-              placeholder="https://"
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                setImageFile(e.target.files?.[0] ?? null);
+                setErrors((er) => ({ ...er, image: undefined }));
+              }}
               className={inputClass}
             />
+            {preview && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={preview}
+                alt="Selected event"
+                className="mt-3 h-40 w-auto rounded-xl border border-[#e5e7eb] object-cover"
+              />
+            )}
           </Field>
 
           {status && (
             <p
               role="status"
               className={`rounded-xl px-4 py-3 text-sm ${
-                status.type === "ok"
-                  ? "bg-[#ecfdf5] text-[#047857]"
-                  : "bg-[#fef2f2] text-[#b91c1c]"
+                status.type === "ok" ? "bg-[#ecfdf5] text-[#047857]" : "bg-[#fef2f2] text-[#b91c1c]"
               }`}
             >
               {status.text}
