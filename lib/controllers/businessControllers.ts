@@ -47,6 +47,9 @@ export async function register_for_free_event(body: unknown) {
     if (full) return { status: 409, data: { error: "Event is full" } };
     return { status: 201, data: { message: "Successfully registered" } };
   } catch (err) {
+    if ((err as { code?: string })?.code === "P2002") {
+      return { status: 409, data: { error: "Already registered for this event" } };
+    }
     console.error("register_for_free_event error:", err);
     return { status: 500, data: { error: "Internal server error" } };
   }
