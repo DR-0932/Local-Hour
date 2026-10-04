@@ -1,8 +1,7 @@
-import EventCard from "@/ui/cardComponent/card";
+"use client"
 
 export default function Page(){
   return(<>
-    <EventCard/>
-  
+
   </>)
-}
+} 
