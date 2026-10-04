@@ -24,6 +24,15 @@ export type User = {
   gender: "Male" | "Female" | "Other";  
 };
 
+export type Participant = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  userId: string | null;
+  createdAt: string;
+};
+
 const API_URL = "";
 
 
@@ -118,5 +127,5 @@ export async function deleteEvent(id: string) {
   });
 }
 export async function getParticipants(id: string) {
-  return request<{ count: number; participant_data: any[] }>(`/api/admin/event/${id}/participants`);
+  return request<{ count: number; participant_data: Participant[] }>(`/api/admin/event/${id}/participants`);
 }
