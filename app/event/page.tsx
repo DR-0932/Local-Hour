@@ -7,7 +7,7 @@ export default async function Page() {
 
   return (
     <>
-      <main className="bg-paper px-4 py-24 h-screen text-ink sm:px-6 lg:px-8">
+      <main className="min-h-screen bg-paper px-4 pb-24 pt-24 text-ink sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <div className="mb-8">
             <p className="text-xs font-medium uppercase tracking-[0.22em] text-graphite">
