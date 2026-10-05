@@ -7,7 +7,6 @@ export default async function Page() {
 
   return (
     <>
-      <Navbar />
       <main className="bg-paper px-4 py-24 h-screen text-ink sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <div className="mb-8">
