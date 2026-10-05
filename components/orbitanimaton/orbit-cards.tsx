@@ -70,6 +70,8 @@ export const PALETTE = {
   lilac: "#da8fff",
   orange: "#ffc48a",
   cream: "#fcf8ec",
+  blue:"#91b2ff",
+  black:"##050505"
 };
 
 /* ─── Typography tester ───────────────────────────────────────────
@@ -219,18 +221,23 @@ export const ORBIT_CARDS = [
 
   {
     image: "/club/inviteonly.jpg",
-    label: "Invite Only",
+    label:"Crowd",
     // link: "https://chat.whatsapp.com/YOUR-INVITE-LINK",
-    eyebrow: "",
-    title: ".",
-    titleSize: 9.5,
+    eyebrow: "Safe Space",
+    title: "Space designed for comfortable self expression",
+    titleWeight: 700,    
+    titleColor:"#ffb3a3",
+    titlePosition: "center",
+    align:"right",
+    titleSize: 6.5,
     body: "",
     footerRight: "Invite Only",
-    accent: PALETTE.lilac,
-    overlay: 0.9,
+    accent: PALETTE.blue,
+    overlay: 1,
     titleFont: F.title,
     bodyFont: F.body,
-    smallFont: F.small,  
+    smallFont: F.small,
+      
   },
 
   {
@@ -241,9 +248,11 @@ export const ORBIT_CARDS = [
     title: "Be part of\nour community ♡",
     titleSize: 10.5,
     titleWeight: 400,
+    titleColor:PALETTE.blue,
     // footerRight: "Join now →",
-    accent: PALETTE.mint,
+    accent: PALETTE.black,
     overlay: 0.8,
+    smallSize:"5",
     titleFont: F.title,
     bodyFont: F.body,
     smallFont: F.small,

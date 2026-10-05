@@ -129,13 +129,13 @@ const DEFAULT_ITEMS: OrbitCardItem[] = ORBIT_CARDS;
  
 const DEFAULT_CONTENT: OrbitContentConfig = {
   showCopy: true,
-  textColor: "#242424",
+  textColor: "#F0E4E4",
   leftTitle: "Local",
   rightTitle: "Hour",
   desktopTitleFont: { fontSize: 144, fontWeight: 400, lineHeight: 0.86, letterSpacing: "-0.075em" },
   compactTitleFont: { fontSize: 72, fontWeight: 400, lineHeight: 0.9, letterSpacing: "-0.065em" },
   titleCenterGap: 32,
-  centerText: "Exploring ideas through daily design practice.",
+  centerText: "No phones allowed",
   centerTextWidth: 220,
   compactTextGap: 28,
   centerFont: { fontSize: 12, fontWeight: 500, lineHeight: 1.05, letterSpacing: "-0.035em" },
@@ -567,7 +567,7 @@ function GridLayout({
  
 export default function OrbitProjectsMobile({
   items = DEFAULT_ITEMS,
-  background = "#D4D4D4",
+  background = "#171717",
   content: contentProp,
   cards: cardsProp,
   motion: motionProp,
