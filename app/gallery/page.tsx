@@ -22,7 +22,6 @@ export default function Page() {
 
   return (
     <main className=" h-screen w-full  ">
-      <Navbar />
        <ParallaxGallery/> 
     </main>
   );
