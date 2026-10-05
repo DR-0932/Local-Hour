@@ -93,6 +93,7 @@ export default function Page() {
             disabled={loading}
             className="w-full rounded-xl bg-black px-4 py-3 text-base font-medium text-white transition hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
+            Login
           </button>
         </form>
       </div>
