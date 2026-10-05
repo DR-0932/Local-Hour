@@ -4,9 +4,10 @@ import CtaSection from "@/components/cta/calltoaction";
 import EventSection from "@/components/landingPage/eventsSection";
 import HeroSection from "@/components/landingPage/heroSection";
 import MeetHostSection from "@/components/landingPage/meetHosts";
+import MobileExpandingCards from "@/components/mobile/eventSection-mobile";
 import OrbitProjects from "@/components/orbitanimaton/orbitAnimation";
 import OrbitProjectsMobile from "@/components/orbitanimaton/orbitanimationMobile";
-import Navbar from "@/ui/navbar";
+
 import { useState, useEffect } from "react";
 
 function useIsDesktop() {
@@ -23,6 +24,7 @@ function useIsDesktop() {
   return isDesktop;
 }
 
+
 export default function Page() {
   const isDesktop = useIsDesktop();
 
@@ -31,14 +33,13 @@ export default function Page() {
       <div className="content">
         {/* Hero: stays pinned behind */}
         <div className="sticky top-0 z-0    bg-paper " >
-          <Navbar />
           <HeroSection />
         </div>
 
         {/* Everything else slides over it */}
         <div className="relative z-10 ">
-          <section className="relative bg-paper">
-            <EventSection />
+          <section className="relative bg-[#171717]">
+              {isDesktop ? <EventSection /> : <MobileExpandingCards />}
           </section>
 
           <section className="relative z-10 bg-paper  ">

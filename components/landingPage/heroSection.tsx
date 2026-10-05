@@ -41,7 +41,7 @@ export default function HeroSection() {
   }, { scope: container });
 
   return (
-    <section className="bg-paper px-5 py-20 sm:px-6 sm:py-28 md:px-12 md:py-36 lg:px-16 min-h-[50vh] sm:min-h-[70vh] lg:min-h-[60vh]">
+    <section className="bg-paper px-5 py-20 sm:px-6 sm:py-28 md:px-12 md:py-36 lg:px-16 min-h-[30vh] sm:min-h-[30vh] lg:min-h-[60vh]">
       <div ref={container} className="mx-auto max-w-7xl min-h-[inherit]">
         <p className="text-line text-xs font-medium uppercase tracking-[0.2em] text-graphite">
           localHour / Sagar
