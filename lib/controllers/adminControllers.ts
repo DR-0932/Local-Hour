@@ -54,20 +54,80 @@ export async function deleteEvent(id: string) {
     return { status: 400, data: { error: "Event ID is required" } };
   } 
   try {
-    const event = await prisma.event.delete({
-         where: { id } 
-        });
+    const event = await prisma.event.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        _count: { select: { registrations: true, transactions: true } },
+      },
+    });
+
+    if (!event) {
+      return { status: 404, data: { error: "Event not found" } };
+    }
+
+    if (event._count.registrations > 0 || event._count.transactions > 0) {
+      await prisma.event.update({
+        where: { id },
+        data: { isArchived: true },
+      });
+
+      return {
+        status: 200,
+        data: {
+          message: "Event archived because it has registrations or transactions",
+        },
+      };
+    }
+
+    await prisma.event.delete({ where: { id } });
     
     return { 
         status: 200, 
         data: { 
             message: "Event deleted successfully",
-             event 
         } };
-  } catch (error: any) {
-    if (error?.code === "P2025") {
-        return { status: 404, data: { error: "Event not found" } }
-    };
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2003"
+    ) {
+      // A registration or transaction may have been created after the count.
+      try {
+        await prisma.event.update({
+          where: { id },
+          data: { isArchived: true },
+        });
+        return {
+          status: 200,
+          data: {
+            message: "Event archived because it has registrations or transactions",
+          },
+        };
+      } catch (archiveError) {
+        if (
+          typeof archiveError === "object" &&
+          archiveError !== null &&
+          "code" in archiveError &&
+          archiveError.code === "P2025"
+        ) {
+          return { status: 404, data: { error: "Event not found" } };
+        }
+        console.error("Archive Event Error:", archiveError);
+        return { status: 500, data: { error: "Internal server error" } };
+      }
+    }
+
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2025"
+    ) {
+      return { status: 404, data: { error: "Event not found" } };
+    }
     
     console.error("Delete Event Error:", error);
     
