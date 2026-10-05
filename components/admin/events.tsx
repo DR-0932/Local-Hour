@@ -59,7 +59,9 @@ const loadEvents = async () => {
   const handleDelete = async () => {
     if (!selectedEvent) return;
 
-    const confirmed = window.confirm(`Delete "${selectedEvent.title}"?`);
+    const confirmed = window.confirm(
+      `Remove "${selectedEvent.title}"? Events with registrations or transactions will be archived to preserve those records. Events without linked records will be permanently deleted.`
+    );
     if (!confirmed) return;
 
     try {

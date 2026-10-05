@@ -19,6 +19,7 @@ export default function Page() {
     if (activeTab === "Create Event") return <CreateEventForm />;
     if (activeTab === "Home") return <HomeDashboard />;
     if (activeTab === "Events") return <EventsPanel />;
+    if (activeTab === "gallery") return <EventsPanel />;
 
     return (
       <div className="flex min-h-[70vh] items-center justify-center rounded-[24px] border border-dashed border-[#dfe3e8] bg-white/60 p-6 text-center text-[#6b7280] md:p-10">
