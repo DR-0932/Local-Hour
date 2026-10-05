@@ -605,7 +605,7 @@ export default function OrbitProjectsMobile({
   const perCardGeom = React.useMemo<CardGeom[]>(() => {
     const columns = Math.min(Math.max(Math.round(grid.columns), 1), Math.max(count, 1));
     const rows = Math.ceil(count / columns);
-    const gridWidth = Math.min(grid.maxWidth, Math.max(vw - 96, 450));
+    const gridWidth = Math.min(grid.maxWidth, Math.max(vw - 96, 400));
     const cardW = Math.max(90, (gridWidth - grid.gap * (columns - 1)) / columns);
     const cardH = cardW / Math.max(cards.aspect, 0.2);
     const gridHeight = rows * cardH + Math.max(rows - 1, 0) * grid.gap;
