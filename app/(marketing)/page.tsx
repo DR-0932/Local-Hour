@@ -7,7 +7,9 @@ import MeetHostSection from "@/components/landingPage/meetHosts";
 import MobileExpandingCards from "@/components/mobile/eventSection-mobile";
 import OrbitProjects from "@/components/orbitanimaton/orbitAnimation";
 import OrbitProjectsMobile from "@/components/orbitanimaton/orbitanimationMobile";
-
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/all";
+gsap.registerPlugin(ScrollTrigger);
 import { useState, useEffect } from "react";
 
 function useIsDesktop() {
@@ -28,6 +30,11 @@ function useIsDesktop() {
 export default function Page() {
   const isDesktop = useIsDesktop();
 
+  useEffect(() => {
+  const id = setTimeout(() => ScrollTrigger.refresh(), 100);
+  return () => clearTimeout(id);
+}, [isDesktop]);
+
   return (
     <main className="wrapper">
       <div className="content">
@@ -43,13 +50,13 @@ export default function Page() {
           </section>
 
           <section className="relative z-10 bg-paper  ">
-            {isDesktop ? <OrbitProjects background="#171717"/> : <OrbitProjectsMobile />}
+            {isDesktop ? <OrbitProjects background="#171717" motion={{ startOffset: 90, scrollLength: 380 }}/> : <OrbitProjectsMobile />}
           </section>
           <section>
             <CtaSection/>
           </section>
 
-          <section className="relative bg-white mt-40">
+          <section className="relative bg-paper ">
             <MeetHostSection />
           </section>
         </div>

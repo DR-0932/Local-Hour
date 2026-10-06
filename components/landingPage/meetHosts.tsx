@@ -1,3 +1,4 @@
+"use client"
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/all";
@@ -29,41 +30,46 @@ const hosts = [
 
 export default function MeetHostSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
+useGSAP(() => {
+  const heading = gsap.utils.toArray(".heading-line");
+  const mintyBox = gsap.utils.toArray(".second-line");
 
-  useGSAP(()=>{
-    const heading =gsap.utils.toArray(".heading-line");
-    const mintyBox = gsap.utils.toArray(".second-line");
+  const tl = gsap.timeline({
+    scrollTrigger: {
+      trigger: sectionRef.current,
+      start: "top 95%",
+      end: "bottom 50%",
+      scrub: 1,
+      invalidateOnRefresh: true,
+      refreshPriority: -1
+    },
+  });
 
-    const tl = gsap.timeline({
-      scrollTrigger:{
-        trigger:sectionRef.current,
-        start:"top 95%",
-        end:"bottom 100%",
-        scrub:1,
-      },
-    });
+  tl.fromTo(
+    heading,
+    { y: 150, opacity: 0 },
+    { y: 0, opacity: 1, duration: 3, stagger: 0.1, ease: "power3.out" }
+  ).fromTo(
+    mintyBox,
+    { x: 150, opacity: 0 },
+    { x: 0, opacity: 1, duration: 3, stagger: 0.2, ease: "power3.out" },
+    0.2
+  );
 
-    tl.fromTo(
-      heading,
-      { y:150, opacity:0},
-      { y: 0, opacity: 1, duration:4,stagger:0.1,ease:"power3.out"}
-    ).fromTo(
-      mintyBox,
-      { x:150, opacity:0 },
-      { x: 0, opacity: 1, duration:3,stagger:0.2,ease:"power3.out"},
-      "0.2"
+  // Re-measure whenever the page height changes
+  let t: ReturnType<typeof setTimeout>;
+  const ro = new ResizeObserver(() => {
+    clearTimeout(t);
+    t = setTimeout(() => ScrollTrigger.refresh(), 100);
+  });
+  ro.observe(document.body);
 
-    )
-  },{scope:sectionRef})
+  return () => {
+    clearTimeout(t);
+    ro.disconnect();
+  };
+}, { scope: sectionRef });
   
-
-
-
-
-
-
-
-
 
   return (
     <section ref={sectionRef} className="overflow-hidden bg-paper px-5 py-16 sm:px-6 md:px-12 md:py-28 lg:px-16">
