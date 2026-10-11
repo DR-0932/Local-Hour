@@ -61,8 +61,8 @@ export default function CtaSection() {
   return (
     <div className="flex min-h-[260px] flex-col items-center justify-center gap-8 rounded-b-[56px] bg-[#171717] px-5 py-2 md:min-h-[320px] md:flex-row md:gap-10">
         <CtaButton
-          href="/gallery"
-          label="Gallery"
+          href="https://forms.gle/m6x55XKPkgPsGLWx9"
+          label="Join Now"
           fill="#ffc48a"
           shadow="#91b2ff"
           arrow={false}
