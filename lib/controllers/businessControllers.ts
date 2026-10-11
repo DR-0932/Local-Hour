@@ -4,7 +4,7 @@ import { event_registration_schema } from "@/lib/validation";
 export async function getEvents() {
   try {
     const upcomingEvents = await prisma.event.findMany({
-      where: { startTime: { gte: new Date() } },
+      where: {isArchived: false},
       orderBy: { startTime: "asc" },
       include: { registrations: { select: { id: true } } },
     });
