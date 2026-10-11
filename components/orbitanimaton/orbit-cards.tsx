@@ -115,6 +115,7 @@ export const CARD_TEXT_DEFAULTS = {
   bodySize: 3.3,
   bodyWidth: 78, // % of the card's inner width
   smallSize: 3.9,
+    link: "https://forms.gle/m6x55XKPkgPsGLWx9",
 
   // layout
   padding: 6, // cqw
@@ -151,6 +152,7 @@ export const ORBIT_CARDS = [
     titleFont: F.title,
     bodyFont: F.body,
     smallFont: F.small,
+    link: "https://forms.gle/m6x55XKPkgPsGLWx9",
 
   },
 
@@ -175,6 +177,8 @@ export const ORBIT_CARDS = [
     titleFont: F.title,
     bodyFont: F.body,
     smallFont: F.small,
+    link: "https://forms.gle/m6x55XKPkgPsGLWx9",
+
 
   },
 
@@ -199,6 +203,8 @@ export const ORBIT_CARDS = [
     titleFont: F.title,
     bodyFont: F.body,
     smallFont: F.small,
+    link: "https://forms.gle/m6x55XKPkgPsGLWx9",
+
   },
 
   {
@@ -216,13 +222,15 @@ export const ORBIT_CARDS = [
     overlayFrom: "full",
     titleFont: F.title,
     bodyFont: F.body,
-    smallFont: F.small,  
+    smallFont: F.small,
+        link: "https://forms.gle/m6x55XKPkgPsGLWx9",
+  
   },
 
   {
     image: "/club/inviteonly.jpg",
     label:"Crowd",
-    // link: "https://chat.whatsapp.com/YOUR-INVITE-LINK",
+    link: "https://forms.gle/m6x55XKPkgPsGLWx9",
     eyebrow: "Safe Space",
     title: "Space designed for comfortable self expression",
     titleWeight: 700,    
@@ -256,5 +264,7 @@ export const ORBIT_CARDS = [
     titleFont: F.title,
     bodyFont: F.body,
     smallFont: F.small,
+        link: "https://forms.gle/m6x55XKPkgPsGLWx9",
+
   },
 ];
