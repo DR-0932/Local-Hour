@@ -5,7 +5,8 @@ export const getUpcomingEvents = unstable_cache(
     async ()=> {
         const events = await prisma.event.findMany({
             where:{
-                isArchived: false
+                isArchived: false,
+                startTime: { gte: new Date() }
             },
             orderBy:{
                 startTime:"asc"
